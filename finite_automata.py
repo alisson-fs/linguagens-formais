@@ -16,12 +16,16 @@ class FiniteAutomata:
 
     def NFA_to_FA(self) -> None:
         transitions = self.__transitions
+        # Calcula e-fecho e verifica se tem transições por epsilon.
         epsilon_closure, has_epsilon_closure = self.calculate_epsilon_closure()
 
+        # Caso o calculo do e-fecho tenha alterado o estado inicial, atualiza ele.
         if epsilon_closure[self.__initial_state] != self.__initial_state:
             self.__initial_state = epsilon_closure[self.__initial_state]
             self.check_accept_state(self.__initial_state)
 
+        # Se houver transições por epsilon, limpa as transições e coloca apenas o estado inicial.
+        # Caso contratio, anula as transições de todos os estados para recalcula-las.
         if has_epsilon_closure:
             self.__states = [self.__initial_state]
             self.__transitions = {self.__initial_state: [None] * len(self.__alphabet)}
@@ -30,13 +34,17 @@ class FiniteAutomata:
             for state in self.__states:
                 self.__transitions[state] = [None] * len(self.__alphabet)
 
+        # Define as novas transições.
         self.define_new_transitions(epsilon_closure, transitions)
 
     def calculate_epsilon_closure(self) -> tuple[dict, bool]:
+        # Inicializa o e-fecho com os estados iniciais.
         epsilon_closure = self.initialize_epsilon_closure()
         for state in self.__states:
             states = []
             alphabet_size = len(self.__alphabet)
+            # Se houver um IndexError, quer dizer que não existem transições por epsilon.
+            # Caso contrario, atualiza o e-fecho do estado.
             try:
                 transition = self.__transitions[state][alphabet_size]
             except IndexError:
@@ -71,39 +79,45 @@ class FiniteAutomata:
         for state in self.__states:
             for i in range(len(self.__alphabet)):
                 if self.__transitions[state][i] == None:
-                    state_list = state.split(',')
+                    # Pega todos os estados que esse estado pode ter.
+                    states_list = state.split(',')
+
+                    # Pega todas as transições do estado.
+                    state_to_transit_list = []
+                    for item_states_list in states_list:
+                        state_to_transit_list.append(transitions[item_states_list][i])
     
-                    state_list_for_transitions = []
-                    for state in state_list:
-                        state_list_for_transitions.append(
-                            transitions[state][i])
-    
-                    state_to_transition = []
-                    for state_transicao in state_list_for_transitions:
-                        if (state_transicao != '-'):
-                            if (len(state_transicao.split(',')) > 1):
-                                state_transicao = state_transicao.split(',')
-                                for e in state_transicao:
-                                    state_to_transition.extend(
-                                        epsilon_closure[e].split(','))
+                    # Adiciona as transições por epsilon dos estados na nova transição.
+                    state_to_transit = []
+                    for state_transit in state_to_transit_list:
+                        if (state_transit != '-'):
+                            if (len(state_transit.split(',')) > 1):
+                                state_transit = state_transit.split(',')
+                                for s in state_transit:
+                                    state_to_transit.extend(epsilon_closure[s].split(','))
                             else:
-                                state_to_transition.extend(
-                                    epsilon_closure[state_transicao].split(','))
+                                state_to_transit.extend(epsilon_closure[state_transit].split(','))
     
-                    state_to_transition = list(set(state_to_transition))
-                    state_to_transition.sort()
-                    state_to_transition = ','.join(map(str, state_to_transition))
+                    state_to_transit = list(set(state_to_transit))
+                    state_to_transit.sort()
+                    state_to_transit = ','.join(map(str, state_to_transit))
+
+                    # Se o novo estado gerado não estiver na lista dos estados, adiciona.
+                    if state_to_transit and state_to_transit not in self.__states:
+                        self.__states.append(state_to_transit)
+                        self.__transitions[state_to_transit] = [None] * len(self.__alphabet)
+                        # Verifica se o novo estado deve fazer parte dos estados de aceitação.
+                        self.check_accept_state(state_to_transit)
     
-                    if state_to_transition not in self.__states and state_to_transition:
-                        self.__states.append(state_to_transition)
-                        self.__transitions[state_to_transition] = [None] * len(self.__alphabet)
-                        self.check_accept_state(state_to_transition)
+                    # Se o estado não houver transição, define ela como '-'.
+                    if not state_to_transit:
+                        state_to_transit = '-'
     
-                    if not state_to_transition:
-                        state_to_transition = '-'
-    
-                    self.__transitions[state][i] = state_to_transition
+                    # Atualiza a transição.
+                    self.__transitions[state][i] = state_to_transit
+        # Retira os estados de aceitação que não fazem mais parte dos estados.
         self.clean_accept_states()
+
 
     def negate(self) -> None:
         new_accept_states = []

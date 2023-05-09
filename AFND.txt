@@ -1,7 +1,7 @@
 *AF
 
 *Estados
-q0 q1 q2 q3
+q0 | q1 | q2 | q3
 
 *EstadoInicial
 q0
@@ -10,10 +10,10 @@ q0
 q3
 
 *Alfabeto
-a b
+a | b
 
 *Transicoes
-q0 q0,q1 q0
-q1 q2 q2
-q2 q3 -
-q3 q3 q3
+q0 -> q0,q1 | q0
+q1 -> q2 | q2
+q2 -> q3 | -
+q3 -> q3 | q3

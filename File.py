@@ -1,4 +1,4 @@
-from FiniteAutomata import FiniteAutomata
+from finite_automata import FiniteAutomata
 
 
 class File:
@@ -40,7 +40,7 @@ class File:
 
     def get_states(self, text: str) -> list:
         index = text.index('*Estados')
-        return text[index + 1].split()
+        return text[index + 1].split(' | ')
 
     def get_initial_state(self, text) -> str:
         index = text.index('*EstadoInicial')
@@ -48,21 +48,21 @@ class File:
 
     def get_accept_states(self, text: str) -> list:
         index = text.index('*EstadosDeAceitacao')
-        return text[index + 1].split()
+        return text[index + 1].split(' | ')
 
     def get_alphabet(self, text: str) -> list:
         index = text.index('*Alfabeto')
-        return text[index + 1].split()
+        return text[index + 1].split(' | ')
 
-    def get_transitions(self, text: str) -> str:
+    def get_transitions(self, text: str) -> dict:
         index = text.index('*Transicoes')
         transitions_list = text[index + 1:]
         automata_transitions = {}
         for transitions in transitions_list:
-            transitions = transitions.split()
-            state = transitions[0]
+            state_transitions = transitions.split(' -> ')
+            state = state_transitions[0]
+            transitions = state_transitions[1].split(' | ')
             automata_transitions[state] = []
-            transitions = transitions[1:]
             for state_to_transition in transitions:
                 automata_transitions[state].append(state_to_transition)
         return automata_transitions

@@ -1,5 +1,5 @@
-from File import File
-from FiniteAutomata import FiniteAutomata
+from file import File
+from finite_automata import FiniteAutomata
 
 
 # Determinização.
