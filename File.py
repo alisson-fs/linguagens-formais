@@ -17,7 +17,7 @@ class File:
 
         type = self.get_type(text)
 
-        if (type == '*AF') : # Encontrou um automato finito
+        if (type == '#FA') : # Encontrou um automato finito
             return self.get_automata(text)
         # elif (type == '*GR' or type == '*GLC') : # Encontrou uma gramatica regular ou uma glc
         #     return self.read_gramatic(text, type)
@@ -39,23 +39,23 @@ class File:
         return FiniteAutomata(states, alphabet, transitions, initial_state, accept_states)
 
     def get_states(self, text: str) -> list:
-        index = text.index('*Estados')
+        index = text.index('#States')
         return text[index + 1].split(' | ')
 
     def get_initial_state(self, text) -> str:
-        index = text.index('*EstadoInicial')
+        index = text.index('#InitialState')
         return text[index + 1]
 
     def get_accept_states(self, text: str) -> list:
-        index = text.index('*EstadosDeAceitacao')
+        index = text.index('#AcceptStates')
         return text[index + 1].split(' | ')
 
     def get_alphabet(self, text: str) -> list:
-        index = text.index('*Alfabeto')
+        index = text.index('#Alphabet')
         return text[index + 1].split(' | ')
 
     def get_transitions(self, text: str) -> dict:
-        index = text.index('*Transicoes')
+        index = text.index('#Transitions')
         transitions_list = text[index + 1:]
         automata_transitions = {}
         for transitions in transitions_list:

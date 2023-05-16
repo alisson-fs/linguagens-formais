@@ -54,8 +54,9 @@ class FiniteAutomata:
                 if (transition != '-'):
                     transition = transition.split(',')
                     states.extend(transition)
+                    states = list(set(map(str, states)))
                     states.sort()
-                    epsilon_closure[state] = ','.join(set(map(str, states)))
+                    epsilon_closure[state] = ','.join(states)
         return (epsilon_closure, True)
 
     def initialize_epsilon_closure(self) -> dict:
@@ -127,26 +128,35 @@ class FiniteAutomata:
         self.__accept_states = new_accept_states
 
     def display(self) -> None:
-        print('Estados (K): ', ' | '.join(self.__states))
-        print('Estados de aceitação (F): ', ' | '.join(self.__accept_states))
-        print('Estado inicial (q0): %s' % self.__initial_state)
+        print('Estados: ', ' | '.join(self.__states))
+        print('Estados de aceitação: ', ' | '.join(self.__accept_states))
+        print('Estado inicial: %s' % self.__initial_state)
         print('Alfabeto: ', ' | '.join(self.__alphabet))
         print('Transições:')
         for state, transition in self.__transitions.items():
             print(f'{state} -> {" | ".join(transition)}')
 
     def export(self, filename: str):
-        text = f'*AF\n*Estados\n' +\
-            f'{" ".join(self.__states)}\n' + \
-            f'*EstadoInicial\n{self.__initial_state}\n' + \
-            '*EstadosDeAceitacao\n' +\
-            f'{" ".join(self.__accept_states)}\n' +\
-            '*Alfabeto\n' +\
-            f'{" ".join(self.__alphabet)}\n' + \
-            '*Transicoes\n'
+        text = f'#FA\n#States\n' +\
+            f'{" | ".join(self.__states)}\n' + \
+            f'#InitialState\n{self.__initial_state}\n' + \
+            '#AcceptStates\n' +\
+            f'{" | ".join(self.__accept_states)}\n' +\
+            '#Alphabet\n' +\
+            f'{" | ".join(self.__alphabet)}\n' + \
+            '#Transitions\n'
 
-        for transition in self.__transitions.values():
-            text += ' '.join(transition) + '\n'
+        transitions = list(self.__transitions.values())
+        for i in range(len(self.__states)):
+            state = self.__states[i]
+            transition = transitions[i]
+            if i == len(self.__states)-1:
+                text += state + ' -> ' + ' | '.join(transition)
+            else:
+                text += state + ' -> ' + ' | '.join(transition) + '\n'
+
+        # for transition in self.__transitions.values():
+        #     text += ' | '.join(transition) + '\n'
 
         with open(filename, 'w') as file:
             file.write(text)

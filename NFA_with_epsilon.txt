@@ -1,0 +1,13 @@
+#FA
+#States
+p | q | r
+#InitialState
+p
+#AcceptStates
+r
+#Alphabet
+a | b | c
+#Transitions
+p -> - | q | r | p,q
+q -> p | r | p,q | -
+r -> - | - | - | -
