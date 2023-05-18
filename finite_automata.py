@@ -1,3 +1,6 @@
+from tabulate import tabulate
+
+
 class FiniteAutomata:
 
     def __init__(
@@ -135,13 +138,28 @@ class FiniteAutomata:
 
 
     def display(self) -> None:
-        print('Estados: ', ' | '.join(self.__states))
-        print('Estados de aceitação: ', ' | '.join(self.__accept_states))
-        print('Estado inicial: %s' % self.__initial_state)
-        print('Alfabeto: ', ' | '.join(self.__alphabet))
-        print('Transições:')
-        for state, transition in self.__transitions.items():
-            print(f'{state} -> {" | ".join(transition)}')
+        table_data = []
+        states = [s for s in self.__transitions.keys()]
+        transitions = [t for t in self.__transitions.values()]
+        for i in range(len(states)):
+            state = states[i]
+            prefix = ''
+            if state == self.__initial_state:
+                prefix += '->'
+            if state in self.__accept_states:
+                prefix += '*'
+            state = prefix + state
+
+            line = []
+            line.append(state)
+            for transition in transitions[i]:
+                line.append(transition)
+            table_data.append(line)
+
+        headers = [a for a in self.__alphabet]
+        headers.insert(0, '')
+        table = tabulate(tabular_data=table_data, headers=headers, tablefmt="fancy_grid")
+        print(table)
 
 
     def export(self, filename: str):
@@ -208,17 +226,23 @@ class FiniteAutomata:
 
 
     def remove_dead_states(self) -> None:
-        alive_states = self.__accept_states
-        for state in self.__states:
-            new_alive_states = []
-            transitions = self.__transitions[state]
-            for transition_state in transitions:
-                if ((transition_state in alive_states) and 
-                    (state not in alive_states) and 
-                    (state not in new_alive_states) and 
-                    (transition_state != '-')):
-                    new_alive_states.append(state)
-            alive_states.extend(new_alive_states)
+        alive_states = []
+        alive_states.extend(self.__accept_states)
+        while True:
+            new_alive = False
+            for state in self.__states:
+                new_alive_states = []
+                transitions = self.__transitions[state]
+                for transition_state in transitions:
+                    if ((transition_state in alive_states) and 
+                        (state not in alive_states) and 
+                        (state not in new_alive_states) and 
+                        (transition_state != '-')):
+                        new_alive = True
+                        new_alive_states.append(state)
+                alive_states.extend(new_alive_states)
+            if not new_alive:
+                break
 
         self.__states = list(set(self.__states).intersection(alive_states))
         self.__transitions = {s: t for s, t in self.__transitions.items() if s in alive_states}
