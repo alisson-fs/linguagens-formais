@@ -1,0 +1,13 @@
+#FA
+#States
+a | b | c
+#InitialState
+a
+#AcceptStates
+a
+#Alphabet
+0 | 1
+#Transitions
+a -> a | b
+b -> b | c
+c -> c | a

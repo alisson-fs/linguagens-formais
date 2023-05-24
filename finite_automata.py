@@ -18,6 +18,57 @@ class FiniteAutomata:
         self.__accept_states = accept_states
 
 
+    @property
+    def states(self):
+        return self.__states
+
+
+    @states.setter
+    def states(self, states):
+        self.__states = states
+
+
+    @property
+    def alphabet(self):
+        return self.__alphabet
+
+
+    @alphabet.setter
+    def alphabet(self, alphabet):
+        self.__alphabet = alphabet
+    
+
+    @property
+    def transitions(self):
+        return self.__transitions
+
+
+    @transitions.setter
+    def transitions(self, transitions):
+        self.__transitions = transitions
+
+
+    @property
+    def initial_state(self):
+        return self.__initial_state
+
+
+    @initial_state.setter
+    def initial_state(self, initial_state):
+        self.__initial_state = initial_state
+
+
+    @property
+    def accept_states(self):
+        return self.__accept_states
+
+
+    @accept_states.setter
+    def accept_states(self, accept_states):
+        self.__accept_states = accept_states
+            
+
+    # Determinização.
     def NFA_to_FA(self) -> None:
         transitions = self.__transitions
         # Calcula e-fecho e verifica se tem transições por epsilon.
@@ -42,7 +93,7 @@ class FiniteAutomata:
         self._define_new_transitions(epsilon_closure, transitions)
 
 
-    def _calculate_epsilon_closure(self) -> tuple[dict, bool]:
+    def _calculate_epsilon_closure(self) -> tuple:
         # Inicializa o e-fecho com os estados iniciais.
         epsilon_closure = self._initialize_epsilon_closure()
         for state in self.__states:
@@ -62,7 +113,7 @@ class FiniteAutomata:
                     states = list(set(map(str, states)))
                     states.sort()
                     epsilon_closure[state] = ','.join(states)
-        return (epsilon_closure, True)
+        return epsilon_closure, True
 
 
     # Inicializa e-fecho.
@@ -133,14 +184,6 @@ class FiniteAutomata:
         self._clean_accept_states()
 
 
-    # def negate(self) -> None:
-    #     new_accept_states = []
-    #     for state in self.states:
-    #         if state not in self.__accept_states:
-    #             new_accept_states.append(state)
-    #     self.__accept_states = new_accept_states
-
-
     # Printa o automato em formato de tabela no terminal.
     def display(self) -> None:
         table_data = []
@@ -162,7 +205,11 @@ class FiniteAutomata:
             table_data.append(line)
 
         headers = [a for a in self.__alphabet]
+        _, has_epsilon_closure = self._calculate_epsilon_closure()
+        if has_epsilon_closure:
+            headers.append('Epsilon')
         headers.insert(0, '')
+        
         table = tabulate(
             tabular_data=table_data, 
             headers=headers, 
@@ -195,19 +242,7 @@ class FiniteAutomata:
             file.write(text)
 
 
-    # def recognize(self, sentence):
-    #     self.NFA_to_FA()
-    #     if not all([c in self.__alphabet for c in sentence]):
-    #         return False
-
-    #     current_state = self.__initial_state
-    #     for c in sentence:
-    #         i = self.__alphabet.index(c)
-    #         current_state = self.__transitions[current_state][i]
-
-    #     return current_state in self.__accept_states
-
-
+    # Minimização.
     def minimize(self) -> None:
         # Determiniza.
         self.NFA_to_FA()

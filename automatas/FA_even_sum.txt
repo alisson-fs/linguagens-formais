@@ -1,0 +1,12 @@
+#FA
+#States
+p | i
+#InitialState
+p
+#AcceptStates
+p
+#Alphabet
+0 | 1
+#Transitions
+p -> p | i
+i -> i | p
