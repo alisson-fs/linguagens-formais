@@ -21,12 +21,12 @@ class FiniteAutomata:
     def NFA_to_FA(self) -> None:
         transitions = self.__transitions
         # Calcula e-fecho e verifica se tem transições por epsilon.
-        epsilon_closure, has_epsilon_closure = self.calculate_epsilon_closure()
+        epsilon_closure, has_epsilon_closure = self._calculate_epsilon_closure()
 
         # Caso o calculo do e-fecho tenha alterado o estado inicial, atualiza ele.
         if epsilon_closure[self.__initial_state] != self.__initial_state:
             self.__initial_state = epsilon_closure[self.__initial_state]
-            self.check_accept_state(self.__initial_state)
+            self._check_accept_state(self.__initial_state)
 
         # Se houver transições por epsilon, limpa as transições e coloca apenas o estado inicial.
         # Caso contratio, anula as transições de todos os estados para recalcula-las.
@@ -39,12 +39,12 @@ class FiniteAutomata:
                 self.__transitions[state] = [None] * len(self.__alphabet)
 
         # Define as novas transições.
-        self.define_new_transitions(epsilon_closure, transitions)
+        self._define_new_transitions(epsilon_closure, transitions)
 
 
-    def calculate_epsilon_closure(self) -> tuple[dict, bool]:
+    def _calculate_epsilon_closure(self) -> tuple[dict, bool]:
         # Inicializa o e-fecho com os estados iniciais.
-        epsilon_closure = self.initialize_epsilon_closure()
+        epsilon_closure = self._initialize_epsilon_closure()
         for state in self.__states:
             states = []
             alphabet_size = len(self.__alphabet)
@@ -65,27 +65,31 @@ class FiniteAutomata:
         return (epsilon_closure, True)
 
 
-    def initialize_epsilon_closure(self) -> dict:
+    # Inicializa e-fecho.
+    def _initialize_epsilon_closure(self) -> dict:
         epsilon_closure = {}
         for state in self.__states:
             epsilon_closure[state] = state
         return epsilon_closure
 
 
-    def check_accept_state(self, transition: list) -> None:
+    # Verifica se a transição possui estados de aceitação e, caso tenha, adiciona.
+    def _check_accept_state(self, transition: list) -> None:
         states = transition.split(',')
         for state in states:
             if state in self.__accept_states and transition not in self.__accept_states:
                 self.__accept_states.append(transition)
 
 
-    def clean_accept_states(self) -> None:
+    # Retira os estados de aceitação que não estão mais em estados.
+    def _clean_accept_states(self) -> None:
         for accept_state in self.__accept_states:
             if accept_state not in self.__states:
                 self.__accept_states.remove(accept_state)
 
 
-    def define_new_transitions(self, epsilon_closure: dict, transitions: dict) -> None:
+    # Define as novas transições do automato determinizado.
+    def _define_new_transitions(self, epsilon_closure: dict, transitions: dict) -> None:
         for state in self.__states:
             for i in range(len(self.__alphabet)):
                 if self.__transitions[state][i] == None:
@@ -117,7 +121,7 @@ class FiniteAutomata:
                         self.__states.append(state_to_transit)
                         self.__transitions[state_to_transit] = [None] * len(self.__alphabet)
                         # Verifica se o novo estado deve fazer parte dos estados de aceitação.
-                        self.check_accept_state(state_to_transit)
+                        self._check_accept_state(state_to_transit)
     
                     # Se o estado não houver transição, define ela como '-'.
                     if not state_to_transit:
@@ -126,7 +130,7 @@ class FiniteAutomata:
                     # Atualiza a transição.
                     self.__transitions[state][i] = state_to_transit
         # Retira os estados de aceitação que não fazem mais parte dos estados.
-        self.clean_accept_states()
+        self._clean_accept_states()
 
 
     # def negate(self) -> None:
@@ -137,6 +141,7 @@ class FiniteAutomata:
     #     self.__accept_states = new_accept_states
 
 
+    # Printa o automato em formato de tabela no terminal.
     def display(self) -> None:
         table_data = []
         states = [s for s in self.__transitions.keys()]
@@ -158,10 +163,16 @@ class FiniteAutomata:
 
         headers = [a for a in self.__alphabet]
         headers.insert(0, '')
-        table = tabulate(tabular_data=table_data, headers=headers, tablefmt="fancy_grid")
+        table = tabulate(
+            tabular_data=table_data, 
+            headers=headers, 
+            tablefmt="fancy_grid", 
+            stralign="center"
+        )
         print(table)
 
 
+    # Exporta o automato em um arquivo válido como entrada.
     def export(self, filename: str):
         text = f'#FA\n#States\n' +\
             f'{" | ".join(self.__states)}\n' + \
@@ -201,15 +212,17 @@ class FiniteAutomata:
         # Determiniza.
         self.NFA_to_FA()
         # Remove estados inalcançáveis.
-        self.remove_unreachable_states()
+        self._remove_unreachable_states()
         # Remove estados mortos.
-        self.remove_dead_states()
-        # Junta estados equivalentes.
-        self.unite_equivalent_states()
+        self._remove_dead_states()
+        # Junta estados equivalentes com algoritmo de partições de Hopcroft.
+        self._unite_equivalent_states()
 
 
-    def remove_unreachable_states(self) -> None:
+    def _remove_unreachable_states(self) -> None:
+        # Inicia a lista de estados alcançaveis pelo estado inicial.
         reachable_states_list = [self.__initial_state]
+        # Percorre a lista de estados alcançaveis adicionando os estados que são alcançaveis pelas transições.
         for state in reachable_states_list:
             new_reachable_states = []
             transitions = self.__transitions[state]
@@ -225,9 +238,11 @@ class FiniteAutomata:
         self.__transitions = {s: t for s, t in self.__transitions.items() if s in self.__states}
 
 
-    def remove_dead_states(self) -> None:
+    def _remove_dead_states(self) -> None:
+        # Inicia a lista de estados vivos pelos estados de aceitação.
         alive_states = []
         alive_states.extend(self.__accept_states)
+        # Percorre a lista de estados adicionando a lista de estados vivos os estados que tem transição para estados vivos.
         while True:
             new_alive = False
             for state in self.__states:
@@ -249,5 +264,106 @@ class FiniteAutomata:
         self.__transitions = {s: [t if t in alive_states else '-' for t in ts] for s, ts in self.__transitions.items()}
 
 
-    def unite_equivalent_states(self) -> None:
-        pass
+    def _unite_equivalent_states(self) -> None:
+        F = self.__accept_states
+        K_minus_F = list(set(self.__states) - set(self.__accept_states))
+        #  Define partições iniciais com estados finais e não finais.
+        P = [F, K_minus_F]
+        # Loop que roda até as partições pararem de se dividirem.
+        while True:
+            has_division = False
+            # Para cada partição, procura se há algum estado não equivalente.
+            for partition in P:
+                found_non_equivalent_states = self._has_non_equivalent_states(P, partition)
+                has_division = has_division or found_non_equivalent_states
+                # Caso encontre estados não equivalentes, começa a busca novamente pelas partições.
+                if found_non_equivalent_states:
+                    break
+            # Caso não tenha ocorrido nenhuma dividão de estado de equivalencia, 
+            # atualiza as transições do automato com os novos estados.
+            if not has_division:
+                self._update_transitions(P)
+                break
+
+    
+    def _update_transitions(self, P) -> None:
+        # Atualiza o estado inicial.
+        initial_equivalent_state_index = self._search_for_partition_index(self.__initial_state, P)
+        self.__initial_state = 'q' + str(initial_equivalent_state_index)
+
+        # Cria os novos estados.
+        new_states = ['q' + str(i) for i in range(0, len(P))]
+        new_transitions = {state: [] for state in new_states}
+        new_accept_states = []
+
+        # Loop para gerar as transições entre os novos estados e definir os novos estados de aceitação.
+        for i in range (0, len(P)):
+            equivalent_state = new_states[i]
+            # Pega um estado da partição.
+            state = P[i][0]
+            # Verifica se esse estado da partição e de aceitação e adiciona o estado de equivalencia 
+            # deste estado nos novos estados de aceitação.
+            if state in self.__accept_states:
+                new_accept_states.append(equivalent_state)
+
+            # Define as transições dos novos estados do automato.
+            for symbol in range(0, len(self.__alphabet)):
+                transition = self.__transitions[state][symbol]
+                target_partition_index = self._search_for_partition_index(transition, P)
+                if target_partition_index == -1:
+                    new_transitions[equivalent_state].append('-')
+                else:
+                    transicao_equivalent_state = 'q' + str(target_partition_index)
+                    new_transitions[equivalent_state].append(transicao_equivalent_state)
+
+        self.__states = new_states
+        self.__transitions = new_transitions
+        self.__accept_states = new_accept_states
+
+
+    def _has_non_equivalent_states(self, P, partition) -> bool:
+        # Faz o mapeamento de transições de cada estado da partição para a partição com estado destino.
+        mapping = {}
+        for symbol in range(0,len(self.__alphabet)):
+            for index in range(-1, len(P)):
+                mapping[index] = []
+
+            # Procura a partição que contém o estado destino e pega seu índice.
+            for state in partition:
+                target_state = self.__transitions[state][symbol]
+                target_partition_index = self._search_for_partition_index(target_state, P)
+                mapping[target_partition_index].append(state)
+            # Caso existam estados não equivalentes, separa a partição.
+            if self._non_equivalents_states_exist(mapping):
+                new_partition = self._convert_mapping_to_partition(mapping)
+                P.extend(new_partition)
+                P.remove(partition)
+                return True
+
+        return False
+
+
+    # Retorna o indice da particao onde se encontra o estado destino.
+    def _search_for_partition_index(self, target_state, P) -> int:
+        for index in range(0, len(P)):
+            for state_partition in P[index]:
+                if state_partition == target_state:
+                    return index
+        return -1
+
+
+    # Verifica se existem estados que não são equivalentes.
+    def _non_equivalents_states_exist(self, mapping) -> bool:
+        division_count = 0
+        for index in mapping:
+            if len(mapping[index]) > 0:
+                division_count += 1
+        return division_count > 1
+
+    # Converte o mapeamento de uma particao para uma nova particao.
+    def _convert_mapping_to_partition(self, mapping) -> list:
+        partition = []
+        for index in mapping:
+            if len(mapping[index]) > 0:
+                partition.append(mapping[index])
+        return partition

@@ -21,9 +21,6 @@ from finite_automata import FiniteAutomata
 # Minimização
 file_NFA_to_minimize = File('automatas/NFA_to_minimize.txt')
 fa_to_minimize = file_NFA_to_minimize.read_file()
-# automata_to_minimize.minimize()
-fa_to_minimize.NFA_to_FA()
-# fa_to_minimize.remove_unreachable_states()
-fa_to_minimize.remove_dead_states()
-# automata_to_minimize.export('automatas/FA_minimum.txt')
+fa_to_minimize.minimize()
+fa_to_minimize.export('automatas/FA_minimum.txt')
 fa_to_minimize.display()
