@@ -69,7 +69,7 @@ class FiniteAutomata:
             
 
     # Determinização.
-    def NFA_to_FA(self) -> None:
+    def NFA_to_FA(self, clean_automata: bool = False) -> None:
         transitions = self.__transitions
         # Calcula e-fecho e verifica se tem transições por epsilon.
         epsilon_closure, has_epsilon_closure = self._calculate_epsilon_closure()
@@ -91,6 +91,9 @@ class FiniteAutomata:
 
         # Define as novas transições.
         self._define_new_transitions(epsilon_closure, transitions)
+
+        if clean_automata:
+            self._clean_automata()
 
 
     def _calculate_epsilon_closure(self) -> tuple:
@@ -243,9 +246,11 @@ class FiniteAutomata:
 
 
     # Minimização.
-    def minimize(self) -> None:
+    def minimize(self, clean_automata: bool = False) -> None:
+        if clean_automata:
+            self._clean_automata()
         # Determiniza.
-        self.NFA_to_FA()
+        self.NFA_to_FA(clean_automata=True)
         # Remove estados inalcançáveis.
         self._remove_unreachable_states()
         # Remove estados mortos.
@@ -402,3 +407,139 @@ class FiniteAutomata:
             if len(mapping[index]) > 0:
                 partition.append(mapping[index])
         return partition
+
+    # Renomeia os estados do automato para que os estados com subestados fiquem mais legíveis.
+    def _clean_automata(self) -> None:
+        new_initial_state = 'q0'
+        new_states = ['q' + str(i) for i in range(0, len(self.__states))]
+        new_transitions = {state: [] for state in new_states}
+        new_accept_states = []
+        self._clean_transitions(new_states, new_transitions, new_accept_states)
+        _, has_epsilon_closure = self._calculate_epsilon_closure()
+        if has_epsilon_closure:
+            self._clean_epsilon_transitions(new_states, new_transitions)
+        self.__states = new_states
+        self.__transitions = new_transitions
+        self.__initial_state = new_initial_state
+        self.__accept_states = new_accept_states
+
+
+    # Atualiza transições por simbolos do alfabeto com os estados do automato correspondente aos 
+    # estados do automato original sem considerar subestados.
+    def _clean_transitions(
+            self, 
+            new_states: list, 
+            new_transitions: dict, 
+            new_accept_states: list,
+            base_index: int = 0
+    ) -> None:
+        j = base_index
+        for state in self.__states:
+            correspondent_state = new_states[j]
+            for i in range(0, len(self.__alphabet)):
+                state_transition = self.__transitions[state][i]
+                if state_transition == '-':
+                    new_transitions[correspondent_state].append('-')
+                    continue
+                new_transition_index = self.__states.index(state_transition)
+                new_transitions[correspondent_state].append(new_states[new_transition_index])
+                if state in self.__accept_states:
+                    new_accept_states.append(correspondent_state)
+            j += 1
+
+
+    # Atualiza transições por epsilon com os estados do automato correspondente aos estados do 
+    # automato original sem considerar subestados..
+    def _clean_epsilon_transitions(
+            self,
+            new_states: list,
+            new_transitions: dict,
+            base_index: int = 0
+    ) -> None:
+        i = len(self.__alphabet)
+        j = base_index
+        for state in self.__states:
+            correspondent_state = new_states[j]
+            j += 1
+            try:
+                state_transition = self.__transitions[state][i]
+            except IndexError:
+                new_transitions[correspondent_state].append('-')
+            else:
+                if state_transition == '-':
+                    new_transitions[correspondent_state].append('-')
+                    continue
+                new_transition_index = self.__states.index(state_transition)
+                new_transitions[correspondent_state].append(new_states[new_transition_index])
+
+
+    # Atualiza transições por simbolos do alfabeto com os estados do automato correspondente aos estados do automato original.
+    def update_new_transitions(
+            self, 
+            new_transitions: dict, 
+            new_states: list, 
+            base_index: int, 
+            new_accept_states: list 
+    ) -> None:
+        j = base_index
+        for state in self.__states:
+            correspondent_state = new_states[j]
+            for i in range(0, len(self.__alphabet)):
+                transition = self.__transitions[state][i]
+                if transition == '-':
+                    new_transitions[correspondent_state].append('-')
+                    continue
+                new_transition = []
+                for state_transition in transition.split(','):
+                    original_state_index = self.__states.index(state_transition)
+                    new_transition.append(new_states[original_state_index + base_index])
+                new_transition = ','.join(map(str, new_transition))
+                new_transitions[correspondent_state].append(new_transition)
+                if state in self.__accept_states:
+                    new_accept_states.append(correspondent_state)
+            j += 1
+
+
+    # Atualiza transições por epsilon com os estados do automato correspondente aos estados do automato original.
+    def update_new_epsilon_transitions(
+            self,
+            new_transitions: dict,
+            new_states: list,
+            base_index: int
+    ) -> None:
+        i = len(self.__alphabet)
+        j = base_index
+        for state in self.__states:
+            correspondent_state = new_states[j]
+            j += 1
+            try:
+                transition = self.__transitions[state][i]
+            except IndexError:
+                new_transitions[correspondent_state].append('-')
+            else:
+                if transition == '-':
+                    new_transitions[correspondent_state].append('-')
+                    continue
+                new_transition = []
+                for state_transition in transition.split(','):
+                    original_state_index = self.__states.index(state_transition)
+                    new_transition.append(new_states[original_state_index + base_index])
+                new_transition = ','.join(map(str, new_transition))
+                new_transitions[correspondent_state].append(new_transition)
+
+
+    # Reconhece a sentença.
+    def recognize_sentence(self, sentence: str) -> bool:
+        self._clean_automata()
+        # Determiniza o automato.
+        self.NFA_to_FA()
+        # Verifica se todos os simbolos da sentença estão no alfabeto.
+        if not all([symbol in self.__alphabet for symbol in sentence]):
+            return False
+        # Percorre o automato com a sentença de entrada.
+        current_state = self.__initial_state
+        for symbol in sentence:
+            symbol_index = self.__alphabet.index(symbol)
+            current_state = self.__transitions[current_state][symbol_index]
+        # Verifica se o último estado é estado de aceitação.
+        return current_state in self.__accept_states
