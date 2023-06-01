@@ -224,7 +224,7 @@ class FiniteAutomata:
 
     # Exporta o automato em um arquivo válido como entrada.
     def export(self, filename: str):
-        text = f'#FA\n#States\n' +\
+        text = f'#FA\n#States\n' + \
             f'{" | ".join(self.__states)}\n' + \
             f'#InitialState\n{self.__initial_state}\n' + \
             '#AcceptStates\n' +\

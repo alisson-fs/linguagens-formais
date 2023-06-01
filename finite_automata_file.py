@@ -1,12 +1,12 @@
 from finite_automata import FiniteAutomata
 
 
-class File:
+class FiniteAutomataFile:
 
-    def __init__(self, file) -> None:
+    def __init__(self, file: str) -> None:
         self.__file = file
 
-    def read_file(self):
+    def read_file(self) -> FiniteAutomata:
         text = None
         try:
             file = open(self.__file)
@@ -14,47 +14,33 @@ class File:
             file.close()
         except OSError:
             file.close()
+        return self._get_automata(text)
 
-        type = self.get_type(text)
-
-        if (type == '#FA') : # Encontrou um automato finito
-            return self.get_automata(text)
-        # elif (type == '*GR' or type == '*GLC') : # Encontrou uma gramatica regular ou uma glc
-        #     return self.read_gramatic(text, type)
-        # elif (type == '*ER') : # Encontrou uma expressao regular
-        #     return self.read_expression(text)
-        # else:
-        #     exit()
-
-    def get_type(self, text) -> str:
-        return text[0]
-
-    def get_automata(self, text: str) -> FiniteAutomata:
-        states = self.get_states(text)
-        alphabet = self.get_alphabet(text)
-        transitions = self.get_transitions(text)
-        initial_state = self.get_initial_state(text)
-        accept_states = self.get_accept_states(text)
-
+    def _get_automata(self, text: str) -> FiniteAutomata:
+        states = self._get_states(text)
+        alphabet = self._get_alphabet(text)
+        transitions = self._get_transitions(text)
+        initial_state = self._get_initial_state(text)
+        accept_states = self._get_accept_states(text)
         return FiniteAutomata(states, alphabet, transitions, initial_state, accept_states)
 
-    def get_states(self, text: str) -> list:
+    def _get_states(self, text: str) -> list:
         index = text.index('#States')
         return text[index + 1].split(' | ')
 
-    def get_initial_state(self, text) -> str:
+    def _get_initial_state(self, text) -> str:
         index = text.index('#InitialState')
         return text[index + 1]
 
-    def get_accept_states(self, text: str) -> list:
+    def _get_accept_states(self, text: str) -> list:
         index = text.index('#AcceptStates')
         return text[index + 1].split(' | ')
 
-    def get_alphabet(self, text: str) -> list:
+    def _get_alphabet(self, text: str) -> list:
         index = text.index('#Alphabet')
         return text[index + 1].split(' | ')
 
-    def get_transitions(self, text: str) -> dict:
+    def _get_transitions(self, text: str) -> dict:
         index = text.index('#Transitions')
         transitions_list = text[index + 1:]
         automata_transitions = {}
