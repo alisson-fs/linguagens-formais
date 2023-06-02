@@ -210,7 +210,7 @@ class FiniteAutomata:
         headers = [a for a in self.__alphabet]
         _, has_epsilon_closure = self._calculate_epsilon_closure()
         if has_epsilon_closure:
-            headers.append('Epsilon')
+            headers.append('&')
         headers.insert(0, '')
         
         table = tabulate(

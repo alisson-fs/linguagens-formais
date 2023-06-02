@@ -5,7 +5,7 @@ CONCAT = '.'
 OR = '|'
 CLOSURE = '*'
 LEAF = None
-EPSILON = 'ε'
+EPSILON = '&'
 
 
 class Node:
