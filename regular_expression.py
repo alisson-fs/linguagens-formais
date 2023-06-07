@@ -16,7 +16,6 @@ class Node:
         self.__symbol = symbol
         self.__index = None
 
-
     def is_leaf(self) -> bool:
         return self.__c1 is None and self.__c2 is None
 
@@ -127,6 +126,46 @@ class RegularExpression:
         self.__index_to_symbol = self.__root.get_correspondents_symbol()
 
 
+    @property
+    def root(self):
+        return self.__root
+    
+
+    @root.setter
+    def root(self, root):
+        self.__root = root
+
+
+    @property
+    def alphabet(self):
+        return self.__alphabet
+
+
+    @alphabet.setter
+    def alphabet(self, alphabet):
+        self.__alphabet = alphabet
+
+
+    @property
+    def index_to_symbol(self):
+        return self.__index_to_symbol
+
+
+    @index_to_symbol.setter
+    def index_to_symbol(self, index_to_symbol):
+        self.__index_to_symbol = index_to_symbol
+
+
+    @property
+    def indexes(self):
+        return self.__indexes
+
+
+    @indexes.setter
+    def indexes(self, indexes):
+        self.__indexes = indexes
+
+
     def display(self) -> None:
         print(self.__expression)
 
@@ -187,67 +226,3 @@ class RegularExpression:
         else:
             # Caso não tenha parênteses, só pega o símbolo e retorna como o ramo da direita
             return expression[:-2], expression[-2], expression[-1]
-
-
-    def RE_to_NFA(self) -> FiniteAutomata:
-        # Define o followpos.
-        followpos = {i: set() for i in self.__indexes}
-        followpos = self.__root.get_followpos(followpos)
-
-        # Define o estado inicial.
-        initial_state = str(self.__root.get_firstpos())
-        accept_states = []
-        unchecked_target_states = [self.__root.get_firstpos()]
-        checked_target_states = []
-        temp_transitions = []
-
-        # Constroi a lógica de transições utilizando os indices do estado e o followpos para 
-        # definir os estados destino para cada simbolo do alfabeto.
-        while unchecked_target_states:
-            current_state = unchecked_target_states.pop(0)
-            checked_target_states.append(current_state)
-            for alphabet_symbol in self.__alphabet:
-                next_state = set()
-                for index_symbol in current_state:
-                    if self.__index_to_symbol[index_symbol] == alphabet_symbol:
-                        current_followpos = followpos[index_symbol]
-                        next_state = next_state.union(current_followpos)
-
-                if next_state and next_state not in checked_target_states:
-                    unchecked_target_states.append(next_state)
-
-                current_temp_transition = {'state': current_state, 'symbol': alphabet_symbol, 'next': next_state}
-                if next_state and current_temp_transition not in temp_transitions:
-                    if max(self.__indexes) in current_temp_transition['state']:
-                        accept_states.append(str(current_state))
-                    temp_transitions.append(current_temp_transition)
-
-        # Define as transições por simbolo do alfabeto.
-        transitions = {}
-        for temp_transition in temp_transitions:
-            current_state = str(temp_transition['state'])
-            symbol = str(temp_transition['symbol'])
-            next_state = str(temp_transition['next'])
-
-            if current_state not in transitions.keys():
-                transitions[current_state] = {}
-            transitions[current_state][symbol] = next_state
-
-        # Organiza as transições para o formato de entrada do automato definindo também as transições vazias.
-        new_transitions = {}
-        for state, transitions_state in transitions.items():
-            transistions_ordered_by_symbol = []
-            for alphabet_symbol in self.__alphabet:
-                if alphabet_symbol in transitions_state.keys():
-                    transistions_ordered_by_symbol.append(transitions_state[alphabet_symbol])
-                else:
-                    transistions_ordered_by_symbol.append('-')
-            new_transitions[state] = transistions_ordered_by_symbol
-
-        return FiniteAutomata(
-            states=list(new_transitions.keys()),
-            alphabet=self.__alphabet,
-            initial_state=initial_state,
-            accept_states=accept_states,
-            transitions=new_transitions
-        )

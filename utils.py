@@ -1,10 +1,12 @@
 from finite_automata import FiniteAutomata
+from regular_expression import RegularExpression
+from regular_grammar import RegularGrammar
 
 
 def automata_union(
         automata_A: FiniteAutomata, 
         automata_B: FiniteAutomata,
-        convert_nfa_to_fa: bool = True
+        convert_nfa_to_dfa: bool = True
 ) -> tuple[FiniteAutomata, dict, dict]:
     # Inicializando novos estados.
     n_states_A = len(automata_A.states)
@@ -42,15 +44,15 @@ def automata_union(
     equivalent_states_A = {automata_A.states[i]: new_states[i + 1] for i in range(0, n_states_A)}
     equivalent_states_B = {automata_B.states[i]: new_states[i + n_states_A + 1] for i in range(0, n_states_B)}
 
-    if convert_nfa_to_fa:
-        new_automata.NFA_to_FA()
+    if convert_nfa_to_dfa:
+        new_automata.NFA_to_DFA()
 
     return new_automata, equivalent_states_A, equivalent_states_B
 
 
 def automata_intersection(automata_A: FiniteAutomata, automata_B: FiniteAutomata) -> FiniteAutomata:
     # Faz a união dos automatos.
-    union_automata_A_B, equivalent_states_A, equivalent_states_B = automata_union(automata_A, automata_B, convert_nfa_to_fa=True)
+    union_automata_A_B, equivalent_states_A, equivalent_states_B = automata_union(automata_A, automata_B, convert_nfa_to_dfa=True)
 
     # Caso o estado q0 criado na união faça transição por epsilon para o estado inicial dos automatos iniciais, 
     # inclui ele nos estados de aceitação.
@@ -86,3 +88,112 @@ def automata_intersection(automata_A: FiniteAutomata, automata_B: FiniteAutomata
     union_automata_A_B.accept_states = new_accept_states
     union_automata_A_B.minimize(clean_automata=True)
     return union_automata_A_B
+
+
+def RE_to_NFA(re: RegularExpression) -> FiniteAutomata:
+    # Define o followpos.
+    followpos = {i: set() for i in re.indexes}
+    followpos = re.root.get_followpos(followpos)
+
+    # Define o estado inicial.
+    initial_state = str(re.root.get_firstpos())
+    accept_states = []
+    unchecked_target_states = [re.root.get_firstpos()]
+    checked_target_states = []
+    temp_transitions = []
+
+    # Constroi a lógica de transições utilizando os indices do estado e o followpos para 
+    # definir os estados destino para cada simbolo do alfabeto.
+    while unchecked_target_states:
+        current_state = unchecked_target_states.pop(0)
+        checked_target_states.append(current_state)
+        for alphabet_symbol in re.alphabet:
+            next_state = set()
+            for index_symbol in current_state:
+                if re.index_to_symbol[index_symbol] == alphabet_symbol:
+                    current_followpos = followpos[index_symbol]
+                    next_state = next_state.union(current_followpos)
+
+            if next_state and next_state not in checked_target_states:
+                unchecked_target_states.append(next_state)
+
+            current_temp_transition = {'state': current_state, 'symbol': alphabet_symbol, 'next': next_state}
+            if next_state and current_temp_transition not in temp_transitions:
+                if max(re.indexes) in current_temp_transition['state']:
+                    accept_states.append(str(current_state))
+                temp_transitions.append(current_temp_transition)
+
+    # Define as transições por simbolo do alfabeto.
+    transitions = {}
+    for temp_transition in temp_transitions:
+        current_state = str(temp_transition['state'])
+        symbol = str(temp_transition['symbol'])
+        next_state = str(temp_transition['next'])
+
+        if current_state not in transitions.keys():
+            transitions[current_state] = {}
+        transitions[current_state][symbol] = next_state
+
+    # Organiza as transições para o formato de entrada do automato definindo também as transições vazias.
+    new_transitions = {}
+    for state, transitions_state in transitions.items():
+        transistions_ordered_by_symbol = []
+        for alphabet_symbol in re.alphabet:
+            if alphabet_symbol in transitions_state.keys():
+                transistions_ordered_by_symbol.append(transitions_state[alphabet_symbol])
+            else:
+                transistions_ordered_by_symbol.append('-')
+        new_transitions[state] = transistions_ordered_by_symbol
+
+    return FiniteAutomata(
+        states=list(new_transitions.keys()),
+        alphabet=re.alphabet,
+        initial_state=initial_state,
+        accept_states=accept_states,
+        transitions=new_transitions
+    )
+
+
+def FA_to_RG(fa: FiniteAutomata) -> RegularGrammar:
+    # Mapeamento de estados para não terminais.
+    correspondent_non_terminal = {}
+    correspondent_non_terminal[fa.initial_state] = 'S'
+    letter = 'A'
+    for state in fa.states:
+        if state == fa.initial_state:
+            continue
+        correspondent_non_terminal[state] = letter
+        letter = chr(ord(letter) + 1)
+
+    N = list(correspondent_non_terminal.values())
+    T = fa.alphabet
+    S = correspondent_non_terminal[fa.initial_state]
+    P = []
+    for state, state_transitions in fa.transitions.items():
+        for state_transition, symbol in zip(state_transitions, fa.alphabet):
+            if state_transition == '-':
+                continue
+            P.append(f'{correspondent_non_terminal[state]} -> {symbol}{correspondent_non_terminal[state_transition]}')
+            if state_transition in fa.accept_states:
+                P.append(f'{correspondent_non_terminal[state]} -> {symbol}')
+
+    # Cria um novo estado inicial caso a gramática aceite epsilon.
+    if fa.initial_state in fa.accept_states:
+        # Criando um não terminal S' 
+        S = correspondent_non_terminal[fa.initial_state] + "'"
+        N.insert(0, S)
+        new_S_productions = []
+        # Adicionando as produções de S em S'.
+        for production in P.copy():
+            if production[0] == correspondent_non_terminal[fa.initial_state]:
+                production_split = production.split(' -> ')
+                new_S_productions.append(f'{S} -> {production_split[1]}')
+        # Adicionando a produção de epsilon em S'.
+        new_S_productions.append(f'{S} -> &')
+        P = new_S_productions + P
+
+    return RegularGrammar(N, T, P, S)
+
+
+def RG_to_NFA(rg: RegularGrammar) -> FiniteAutomata:
+    pass

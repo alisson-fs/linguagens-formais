@@ -69,7 +69,7 @@ class FiniteAutomata:
             
 
     # Determinização.
-    def NFA_to_FA(self, clean_automata: bool = False) -> None:
+    def NFA_to_DFA(self, clean_automata: bool = False) -> None:
         transitions = self.__transitions
         # Calcula e-fecho e verifica se tem transições por epsilon.
         epsilon_closure, has_epsilon_closure = self._calculate_epsilon_closure()
@@ -250,7 +250,7 @@ class FiniteAutomata:
         if clean_automata:
             self._clean_automata()
         # Determiniza.
-        self.NFA_to_FA(clean_automata=True)
+        self.NFA_to_DFA(clean_automata=True)
         # Remove estados inalcançáveis.
         self._remove_unreachable_states()
         # Remove estados mortos.
@@ -532,7 +532,7 @@ class FiniteAutomata:
     def recognize_sentence(self, sentence: str) -> bool:
         self._clean_automata()
         # Determiniza o automato.
-        self.NFA_to_FA()
+        self.NFA_to_DFA()
         # Verifica se todos os simbolos da sentença estão no alfabeto.
         if not all([symbol in self.__alphabet for symbol in sentence]):
             return False

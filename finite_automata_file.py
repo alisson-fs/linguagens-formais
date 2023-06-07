@@ -2,9 +2,9 @@ from finite_automata import FiniteAutomata
 
 
 class FiniteAutomataFile:
-
     def __init__(self, file: str) -> None:
         self.__file = file
+
 
     def read_file(self) -> FiniteAutomata:
         text = None
@@ -16,6 +16,7 @@ class FiniteAutomataFile:
             file.close()
         return self._get_automata(text)
 
+
     def _get_automata(self, text: str) -> FiniteAutomata:
         states = self._get_states(text)
         alphabet = self._get_alphabet(text)
@@ -24,17 +25,21 @@ class FiniteAutomataFile:
         accept_states = self._get_accept_states(text)
         return FiniteAutomata(states, alphabet, transitions, initial_state, accept_states)
 
+
     def _get_states(self, text: str) -> list:
         index = text.index('#States')
         return text[index + 1].split(' | ')
+
 
     def _get_initial_state(self, text) -> str:
         index = text.index('#InitialState')
         return text[index + 1]
 
+
     def _get_accept_states(self, text: str) -> list:
         index = text.index('#AcceptStates')
         return text[index + 1].split(' | ')
+
 
     def _get_alphabet(self, text: str) -> list:
         index = text.index('#Alphabet')

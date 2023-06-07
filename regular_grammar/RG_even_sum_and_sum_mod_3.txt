@@ -1,0 +1,20 @@
+#RG
+#NonTerminals
+S' | S | A | B
+#Terminals
+0 | 1
+#InitialSymbol
+S'
+#Productions
+S' -> 0S
+S' -> 0
+S' -> 1A
+S' -> &
+S -> 0S
+S -> 0
+S -> 1A
+A -> 0A
+A -> 1B
+B -> 0B
+B -> 1S
+B -> 1

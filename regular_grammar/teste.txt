@@ -1,0 +1,14 @@
+#RG
+#NonTerminals
+A | B
+#Terminals
+a | b
+#InitialSymbol
+S
+#Productions
+S -> aA
+S -> bB
+A -> a
+A -> aA
+B -> b
+B -> bB
