@@ -195,5 +195,69 @@ def FA_to_RG(fa: FiniteAutomata) -> RegularGrammar:
     return RegularGrammar(N, T, P, S)
 
 
-def RG_to_NFA(rg: RegularGrammar) -> FiniteAutomata:
-    pass
+def RG_to_FA(rg: RegularGrammar) -> FiniteAutomata:
+    # Define os estados do automato.
+    states = rg.non_terminals
+    letter = 'A'
+    for _ in range(26):
+        if letter not in rg.non_terminals:
+            accept_state = letter
+            states.append(accept_state)
+            break
+        letter = chr(ord(letter) + 1)
+    # Define o alfabeto.
+    alphabet = rg.terminals
+
+    # Define o estado inicial.
+    initial_state = rg.initial_symbol
+
+    # Define os estados de aceitação.
+    accept_states = [accept_state]
+
+    # Define as transições do automato pelas produções da gramática.
+    grammar_transitions = {}
+    for production in rg.productions:
+        current_state, terminal, non_terminal, has_epsilon_transition = rg.separate_production(production)
+
+        # Se houver epsilon, adiciona a transição para o estado de aceitação.
+        if has_epsilon_transition:
+            if (current_state, '&') not in grammar_transitions.keys():
+                grammar_transitions[(current_state, '&')] = []
+            grammar_transitions[(current_state, '&')].append(accept_state)
+        else:
+            if (current_state, terminal) not in grammar_transitions.keys() and terminal is not None:
+                grammar_transitions[(current_state, terminal)] = []
+            if non_terminal is None and terminal is not None:
+                grammar_transitions[(current_state, terminal)].append(accept_state)
+            elif non_terminal is not None and terminal is not None:
+                grammar_transitions[(current_state, terminal)].append(non_terminal)
+
+    # Cria as transições para estados mortos.
+    for non_terminal in rg.non_terminals:
+        for terminal in rg.terminals:
+            if (non_terminal, terminal) not in grammar_transitions.keys():
+                grammar_transitions[(non_terminal, terminal)] = ['-']
+
+    # Define as transições no formato de entrada do automato.
+    temp_transitions = {}
+    for non_terminal in rg.non_terminals:
+        temp_transitions[non_terminal] = []
+        for symbol in alphabet:
+            if (non_terminal, symbol) in grammar_transitions.keys():
+                temp_transitions[non_terminal].append(grammar_transitions[(non_terminal, symbol)])
+            else:
+                temp_transitions[non_terminal].append('-')
+        if (non_terminal, '&') in grammar_transitions.keys():
+            temp_transitions[non_terminal].append(grammar_transitions[(non_terminal, '&')])
+        else:
+            temp_transitions[non_terminal].append('-')
+
+    # Arrumando os estados de destino das transições para o formato de entrada do automato.
+    transitions = {}
+    for state, next_states in temp_transitions.items():
+        transitions[state] = []
+        for next_state in next_states:
+            next_state = ','.join(next_state)
+            transitions[state].append(next_state)
+
+    return FiniteAutomata(states, alphabet, transitions, initial_state, accept_states)

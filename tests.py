@@ -1,7 +1,8 @@
 from finite_automata_file import FiniteAutomataFile
 from finite_automata import FiniteAutomata
 from regular_expression_file import RegularExpressionFile
-from utils import automata_union, automata_intersection, RE_to_NFA, FA_to_RG
+from regular_grammar_file import RegularGrammarFile
+from utils import automata_union, automata_intersection, RE_to_NFA, FA_to_RG, RG_to_FA
 
 
 # Determinização sem Epsilon:
@@ -75,4 +76,10 @@ from utils import automata_union, automata_intersection, RE_to_NFA, FA_to_RG
 # dfa_sum_mod_3 = file_dfa_sum_mod_3.read_file()
 # rg_sum_mod_3 = FA_to_RG(dfa_sum_mod_3)
 # rg_sum_mod_3.display()
-# rg_sum_mod_3.export('regular_grammar/RG_even_sum_and_sum_mod_3.txt')
+# rg_sum_mod_3.export('regular_grammar/RG_sum_mod_3.txt')
+
+# Conversão GR para AFND:
+file_rg_sum_mod_3 = RegularGrammarFile('regular_grammar/RG_sum_mod_3.txt')
+rg_sum_mod_3 = file_rg_sum_mod_3.read_file()
+fa_sum_mod_3 = RG_to_FA(rg_sum_mod_3)
+fa_sum_mod_3.display()

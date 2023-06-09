@@ -32,7 +32,7 @@ class RegularGrammarFile:
 
     def _get_terminals(self, text) -> list:
         index = text.index('#Terminals')
-        return text[index + 1]
+        return text[index + 1].split(' | ')
 
 
     def _get_productions(self, text: str) -> list:
