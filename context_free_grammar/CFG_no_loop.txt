@@ -1,0 +1,18 @@
+#CFG
+#NonTerminals
+S | A | B | C | D
+#Terminals
+a | c | d | e | f
+#InitialSymbol
+S
+#Productions
+S -> AC
+S -> BC
+A -> aD
+A -> cC
+B -> aB
+B -> dD
+C -> eC
+C -> eA
+D -> fD
+D -> CB

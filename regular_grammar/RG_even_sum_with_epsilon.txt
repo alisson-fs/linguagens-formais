@@ -1,0 +1,15 @@
+#RG
+#NonTerminals
+P | I
+#Terminals
+0 | 1
+#InitialSymbol
+P
+#Productions
+P -> 0P
+P -> 1I
+P -> 0
+P -> &
+I -> 0I
+I -> 1P
+I -> 1

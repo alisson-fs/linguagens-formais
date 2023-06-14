@@ -1,3 +1,4 @@
+from context_free_grammar_file import ContextFreeGrammarFile
 from finite_automata_file import FiniteAutomataFile
 from finite_automata import FiniteAutomata
 from regular_expression_file import RegularExpressionFile
@@ -78,8 +79,26 @@ from utils import automata_union, automata_intersection, RE_to_NFA, FA_to_RG, RG
 # rg_sum_mod_3.display()
 # rg_sum_mod_3.export('regular_grammar/RG_sum_mod_3.txt')
 
-# Conversão GR para AFND:
-file_rg_sum_mod_3 = RegularGrammarFile('regular_grammar/RG_sum_mod_3.txt')
-rg_sum_mod_3 = file_rg_sum_mod_3.read_file()
-fa_sum_mod_3 = RG_to_FA(rg_sum_mod_3)
-fa_sum_mod_3.display()
+# Conversão GR sem epsilon para AFND:
+# file_rg_sum_mod_3 = RegularGrammarFile('regular_grammar/RG_sum_mod_3.txt')
+# rg_sum_mod_3 = file_rg_sum_mod_3.read_file()
+# fa_sum_mod_3 = RG_to_FA(rg_sum_mod_3)
+# fa_sum_mod_3.display()
+
+# Conversão GR com epsilon para AFND:
+# file_rg_even_sum_with_epsilon = RegularGrammarFile('regular_grammar/RG_even_sum_with_epsilon.txt')
+# rg_even_sum_with_epsilon = file_rg_even_sum_with_epsilon.read_file()
+# fa_even_sum_with_epsilon = RG_to_FA(rg_even_sum_with_epsilon)
+# fa_even_sum_with_epsilon.display()
+
+# Fatoração de GLC sem loop:
+file_cfg_no_loop = ContextFreeGrammarFile('context_free_grammar/CFG_no_loop.txt')
+cfg_no_loop = file_cfg_no_loop.read_file()
+cfg_no_loop.factor()
+cfg_no_loop.display()
+
+# Fatoração de GLC com loop:
+
+
+
+
