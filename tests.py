@@ -92,13 +92,23 @@ from utils import automata_union, automata_intersection, RE_to_NFA, FA_to_RG, RG
 # fa_even_sum_with_epsilon.display()
 
 # Fatoração de GLC sem loop:
-file_cfg_no_loop = ContextFreeGrammarFile('context_free_grammar/CFG_no_loop.txt')
-cfg_no_loop = file_cfg_no_loop.read_file()
-cfg_no_loop.factor()
-cfg_no_loop.display()
+# file_cfg_no_loop = ContextFreeGrammarFile('context_free_grammar/CFG_no_loop.txt')
+# cfg_no_loop = file_cfg_no_loop.read_file()
+# cfg_no_loop.factor()
+# cfg_no_loop.display()
 
+# TODO
 # Fatoração de GLC com loop:
 
+# Remover recursão a esquerda com apenas recursão direta:
+# file_cfg_just_direct_left_recursion = ContextFreeGrammarFile('context_free_grammar/CFG_just_direct_left_recursion.txt')
+# cfg_just_direct_left_recursion = file_cfg_just_direct_left_recursion.read_file()
+# cfg_just_direct_left_recursion.remove_left_recursion()
+# cfg_just_direct_left_recursion.display()
 
-
+# Remover recursão a esquerda com recursão direta e indireta:
+# file_cfg_with_direct_and_indirect_left_recursion = ContextFreeGrammarFile('context_free_grammar/CFG_with_direct_and_indirect_left_recursion.txt')
+# cfg_with_direct_and_indirect_left_recursion = file_cfg_with_direct_and_indirect_left_recursion.read_file()
+# cfg_with_direct_and_indirect_left_recursion.remove_left_recursion()
+# cfg_with_direct_and_indirect_left_recursion.display()
 

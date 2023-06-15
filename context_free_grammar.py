@@ -194,3 +194,55 @@ class ContextFreeGrammar:
                 rest_production = production.replace(first_symbol, '')
                 return first_symbol, rest_production
         return None, None
+
+
+    def remove_left_recursion(self) -> None:
+        self._convert_indirect_to_direct_recursion()
+        self._remove_direct_left_recursion()
+
+
+    def _remove_direct_left_recursion(self) -> None:
+        new_productions = {}
+        for non_terminal, non_terminal_productions in self.__productions.items():
+            productions_with_recursion = []
+
+            for non_terminal_production in non_terminal_productions:
+                if non_terminal_production[0] == non_terminal:
+                    productions_with_recursion.append(non_terminal_production)
+
+            if productions_with_recursion:
+                new_non_terminal = non_terminal + "'"
+                new_non_terminal_productions = ['&']
+                updated_non_terminal_productions = []
+
+                for non_terminal_production in non_terminal_productions:
+                    if non_terminal_production in productions_with_recursion:
+                        new_non_terminal_productions.append(non_terminal_production[1:] + new_non_terminal)
+                    else:
+                        updated_non_terminal_productions.append(non_terminal_production + new_non_terminal)
+
+                new_productions[non_terminal] = updated_non_terminal_productions
+                new_productions[new_non_terminal] = new_non_terminal_productions
+
+            else:
+                new_productions[non_terminal] = non_terminal_productions
+
+        self.__non_terminals = list(new_productions.keys())
+        self.__productions = new_productions
+
+
+    def _convert_indirect_to_direct_recursion(self) -> None:
+        new_productions = self.__productions.copy()
+        verified_non_terminals = []
+        for Ai in self.__non_terminals:
+            for Aj in self.__non_terminals:
+                if Ai != Aj and Aj not in verified_non_terminals:
+                    for Aj_production in self.__productions[Aj].copy():
+                        if Ai == Aj_production[:len(Ai)]:
+                            new_productions[Aj].remove(Aj_production)
+
+                            for Ai_production in self.__productions[Ai]:
+                                new_productions[Aj].append(Ai_production + Aj_production[len(Ai):])
+            verified_non_terminals.append(Ai)
+
+        self.__productions = new_productions
