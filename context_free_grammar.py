@@ -246,3 +246,54 @@ class ContextFreeGrammar:
             verified_non_terminals.append(Ai)
 
         self.__productions = new_productions
+
+
+    def get_firsts(self) -> dict:
+        # Define os firsts para os terminais.
+        firsts = {terminal: set(terminal) for terminal in self.__terminals + ['&']}
+
+        # Define os firsts para os não terminais.
+        for non_terminal in self.__non_terminals:
+            firsts[non_terminal] = set()
+
+        # Calcula os firsts até não existirem mais atualizações.
+        while True:
+            firsts_updated = False
+            for non_terminal, non_terminal_productions in self.__productions.items():
+                for non_terminal_production in non_terminal_productions:
+                    first_symbol_in_production, production_rest = self._get_first_symbol_in_production_and_rest(non_terminal_production)
+
+                    # Se o primeiro simbolo da produção do não terminal for um terminal, adiciona ele aos firsts do não terminal.
+                    if first_symbol_in_production in self.__terminals:
+                        updated_non_terminal_first = firsts[non_terminal].union(firsts[first_symbol_in_production])
+
+                    # Se o primeiro simbolo da produção do não terminal for epsilon, adiciona ele aos firsts do não terminal.
+                    elif first_symbol_in_production == '&':
+                        updated_non_terminal_first = firsts[non_terminal].union(set('&'))
+
+                    # Se o primeiro simbolo da produção do não terminal for um não terminal: 
+                    elif first_symbol_in_production in self.__non_terminals:
+                        # Adiciona os firsts do não terminal da produção nos firsts do não terminal.
+                        first_symbol_in_production_firsts = firsts[first_symbol_in_production]
+                        updated_non_terminal_first = firsts[non_terminal].union(first_symbol_in_production_firsts - set('&'))
+
+                        # Se nos firsts do não terminal da produção existir epsilon, adiciona também os firsts do 
+                        # proximo não terminal, caso exista.
+                        while '&' in first_symbol_in_production_firsts:
+                            # Se a produção terminal sem encontrar um terminal, adiciona epsilon nos firsts.
+                            if production_rest == '':
+                                updated_non_terminal_first = updated_non_terminal_first.union(set('&'))
+                                break
+
+                            first_symbol_in_production, production_rest = self._get_first_symbol_in_production_and_rest(production_rest)
+                            first_symbol_in_production_firsts = firsts[first_symbol_in_production]
+                            updated_non_terminal_first = updated_non_terminal_first.union(first_symbol_in_production_firsts - set('&'))
+
+                    if updated_non_terminal_first != firsts[non_terminal]:
+                        firsts_updated = True
+                        firsts[non_terminal] = updated_non_terminal_first
+
+            if not firsts_updated:
+                break
+        
+        return firsts

@@ -112,3 +112,9 @@ from utils import automata_union, automata_intersection, RE_to_NFA, FA_to_RG, RG
 # cfg_with_direct_and_indirect_left_recursion.remove_left_recursion()
 # cfg_with_direct_and_indirect_left_recursion.display()
 
+# Firsts:
+# file_cfg_with_direct_and_indirect_left_recursion = ContextFreeGrammarFile('context_free_grammar/CFG_with_direct_and_indirect_left_recursion.txt')
+# cfg_with_direct_and_indirect_left_recursion = file_cfg_with_direct_and_indirect_left_recursion.read_file()
+# cfg_with_direct_and_indirect_left_recursion.display()
+# firsts_cfg_with_direct_and_indirect_left_recursion = cfg_with_direct_and_indirect_left_recursion.get_firsts()
+# print(firsts_cfg_with_direct_and_indirect_left_recursion)
