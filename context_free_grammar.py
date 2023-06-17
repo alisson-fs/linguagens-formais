@@ -190,7 +190,7 @@ class ContextFreeGrammar:
         first_symbol = ''
         for char in production:
             first_symbol += char
-            if first_symbol in self.__non_terminals or first_symbol in self.__terminals:
+            if first_symbol in self.__non_terminals or first_symbol in self.__terminals or first_symbol == '&':
                 rest_production = production.replace(first_symbol, '')
                 return first_symbol, rest_production
         return None, None
@@ -278,16 +278,16 @@ class ContextFreeGrammar:
                         updated_non_terminal_first = firsts[non_terminal].union(first_symbol_in_production_firsts - set('&'))
 
                         # Se nos firsts do não terminal da produção existir epsilon, adiciona também os firsts do 
-                        # proximo não terminal, caso exista.
+                        # proximo simbolo, caso exista.
                         while '&' in first_symbol_in_production_firsts:
                             # Se a produção terminal sem encontrar um terminal, adiciona epsilon nos firsts.
                             if production_rest == '':
-                                updated_non_terminal_first = updated_non_terminal_first.union(set('&'))
+                                updated_non_terminal_first.update(set('&'))
                                 break
 
                             first_symbol_in_production, production_rest = self._get_first_symbol_in_production_and_rest(production_rest)
                             first_symbol_in_production_firsts = firsts[first_symbol_in_production]
-                            updated_non_terminal_first = updated_non_terminal_first.union(first_symbol_in_production_firsts - set('&'))
+                            updated_non_terminal_first.update(first_symbol_in_production_firsts - set('&'))
 
                     if updated_non_terminal_first != firsts[non_terminal]:
                         firsts_updated = True
@@ -297,3 +297,64 @@ class ContextFreeGrammar:
                 break
         
         return firsts
+
+
+    def get_follows(self, firsts: dict = None) -> dict:
+        if not firsts:
+            firsts = self.get_firsts()
+        
+        follows = {non_terminal: set() for non_terminal in self.__non_terminals}
+        follows[self.__initial_symbol] = set('$')
+
+        while True:
+            follows_updated = False
+            for non_terminal, non_terminal_productions in self.__productions.items():
+                for non_terminal_production in non_terminal_productions:
+                    production_split = self._production_split(non_terminal_production)
+                    nullable_or_non_existent_beta = False
+                    for index_symbol, symbol in enumerate(production_split):
+                        if symbol in self.__non_terminals:
+                            updated_non_terminal_follows = follows[symbol]
+
+                            beta = production_split[index_symbol + 1:]
+                            if len(beta) > 0:
+                                beta_firsts = self._beta_firsts(beta, firsts)
+                                updated_non_terminal_follows.update(beta_firsts - set('&'))
+
+                                if '&' in beta_firsts and non_terminal != symbol:
+                                    nullable_or_non_existent_beta = True
+                            elif non_terminal != symbol:
+                                nullable_or_non_existent_beta = True
+
+                            if nullable_or_non_existent_beta:
+                                updated_non_terminal_follows.update(follows[non_terminal])
+
+                            if updated_non_terminal_follows != follows[symbol]:
+                                follows_updated = True
+                                follows[non_terminal] = updated_non_terminal_follows
+
+            if not follows_updated:
+                break
+
+        return follows
+
+
+    def _production_split(self, production) -> list:
+        production_symbols = []
+        while len(production) > 0:
+            first_symbol, rest = self._get_first_symbol_in_production_and_rest(production)
+            production_symbols.append(first_symbol)
+            production = rest
+        return production_symbols
+
+
+    def _beta_firsts(self, beta, firsts) -> set:
+        beta_firsts = set()
+        for index_symbol, symbol in enumerate(beta):
+            if '&' not in firsts[symbol]:
+                beta_firsts.update(firsts[symbol])
+                break
+            beta_firsts.update(firsts[symbol] - set('&'))
+            if index_symbol == len(beta) - 1:
+                beta_firsts.add('&')
+        return beta_firsts

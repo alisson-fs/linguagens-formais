@@ -79,11 +79,13 @@ from utils import automata_union, automata_intersection, RE_to_NFA, FA_to_RG, RG
 # rg_sum_mod_3.display()
 # rg_sum_mod_3.export('regular_grammar/RG_sum_mod_3.txt')
 
+
 # Conversão GR sem epsilon para AFND:
 # file_rg_sum_mod_3 = RegularGrammarFile('regular_grammar/RG_sum_mod_3.txt')
 # rg_sum_mod_3 = file_rg_sum_mod_3.read_file()
 # fa_sum_mod_3 = RG_to_FA(rg_sum_mod_3)
 # fa_sum_mod_3.display()
+
 
 # Conversão GR com epsilon para AFND:
 # file_rg_even_sum_with_epsilon = RegularGrammarFile('regular_grammar/RG_even_sum_with_epsilon.txt')
@@ -91,14 +93,17 @@ from utils import automata_union, automata_intersection, RE_to_NFA, FA_to_RG, RG
 # fa_even_sum_with_epsilon = RG_to_FA(rg_even_sum_with_epsilon)
 # fa_even_sum_with_epsilon.display()
 
+
 # Fatoração de GLC sem loop:
 # file_cfg_no_loop = ContextFreeGrammarFile('context_free_grammar/CFG_no_loop.txt')
 # cfg_no_loop = file_cfg_no_loop.read_file()
 # cfg_no_loop.factor()
 # cfg_no_loop.display()
 
+
 # TODO
 # Fatoração de GLC com loop:
+
 
 # Remover recursão a esquerda com apenas recursão direta:
 # file_cfg_just_direct_left_recursion = ContextFreeGrammarFile('context_free_grammar/CFG_just_direct_left_recursion.txt')
@@ -106,11 +111,13 @@ from utils import automata_union, automata_intersection, RE_to_NFA, FA_to_RG, RG
 # cfg_just_direct_left_recursion.remove_left_recursion()
 # cfg_just_direct_left_recursion.display()
 
+
 # Remover recursão a esquerda com recursão direta e indireta:
 # file_cfg_with_direct_and_indirect_left_recursion = ContextFreeGrammarFile('context_free_grammar/CFG_with_direct_and_indirect_left_recursion.txt')
 # cfg_with_direct_and_indirect_left_recursion = file_cfg_with_direct_and_indirect_left_recursion.read_file()
 # cfg_with_direct_and_indirect_left_recursion.remove_left_recursion()
 # cfg_with_direct_and_indirect_left_recursion.display()
+
 
 # Firsts:
 # file_cfg_with_direct_and_indirect_left_recursion = ContextFreeGrammarFile('context_free_grammar/CFG_with_direct_and_indirect_left_recursion.txt')
@@ -118,3 +125,11 @@ from utils import automata_union, automata_intersection, RE_to_NFA, FA_to_RG, RG
 # cfg_with_direct_and_indirect_left_recursion.display()
 # firsts_cfg_with_direct_and_indirect_left_recursion = cfg_with_direct_and_indirect_left_recursion.get_firsts()
 # print(firsts_cfg_with_direct_and_indirect_left_recursion)
+
+
+# Follows:
+# file_cfg_follows_nullable = ContextFreeGrammarFile('context_free_grammar/CFG_follows_nullable.txt')
+# cfg_follows_nullable = file_cfg_follows_nullable.read_file()
+# cfg_follows_nullable.display()
+# follows_cfg_follows_nullable = cfg_follows_nullable.get_follows()
+# print(follows_cfg_follows_nullable)

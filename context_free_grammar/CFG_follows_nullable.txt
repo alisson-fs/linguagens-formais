@@ -1,0 +1,15 @@
+#CFG
+#NonTerminals
+S | A | B | C
+#Terminals
+a | b | c | d
+#InitialSymbol
+S
+#Productions
+S -> ABC
+A -> aA
+A -> &
+B -> bB
+B -> ACd
+C -> cC
+C -> &
