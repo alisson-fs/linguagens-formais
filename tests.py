@@ -97,12 +97,30 @@ from utils import automata_union, automata_intersection, RE_to_NFA, FA_to_RG, RG
 # Fatoração de GLC sem loop:
 # file_cfg_no_loop = ContextFreeGrammarFile('context_free_grammar/CFG_no_loop.txt')
 # cfg_no_loop = file_cfg_no_loop.read_file()
-# cfg_no_loop.factor()
 # cfg_no_loop.display()
+# print()
+# was_factored = cfg_no_loop.factor()
+# if was_factored:
+#     cfg_no_loop.display()
+
+# file_cfg_factoring_aho = ContextFreeGrammarFile('context_free_grammar/CFG_factoring_aho.txt')
+# cfg_factoring_aho = file_cfg_factoring_aho.read_file()
+# cfg_factoring_aho.display()
+# print()
+# was_factored = cfg_factoring_aho.factor()
+# if was_factored:
+#     cfg_factoring_aho.display()
 
 
-# TODO
+# TODO: Fazer esse teste, essa gramática não tem loop.
 # Fatoração de GLC com loop:
+# file_cfg_with_loop = ContextFreeGrammarFile('context_free_grammar/CFG_with_loop.txt')
+# cfg_with_loop = file_cfg_with_loop.read_file()
+# cfg_with_loop.display()
+# print()
+# was_factored = cfg_with_loop.factor()
+# if was_factored:
+#     cfg_with_loop.display()
 
 
 # Remover recursão a esquerda com apenas recursão direta:

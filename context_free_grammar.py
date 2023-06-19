@@ -78,55 +78,61 @@ class ContextFreeGrammar:
 
         with open(filename, 'w') as file:
             file.write(text)
+    
 
-
-    def factor(self) -> None:
-        num_new_non_terminals = 0
-
-        # Não determinismo direto.
-        for non_terminal in self.__non_terminals:
-            num_new_non_terminals = self._solve_direct_non_determinism(non_terminal, num_new_non_terminals)
-        
-        # Não deterministo indireto.
+    def factor(self) -> bool:
+        num_derivation_non_terminals = {non_terminal: 0 for non_terminal in self.__non_terminals}
         count_steps = 0
-        for non_terminal in self.__non_terminals:
+        while True:
             # Limitando número de passos para garatir que não ficará em loop.
-            if count_steps > 15:
-                print('ERRO: Alcançou o limite de passos.')
+            if count_steps > 50:
+                print('ERRO: A fatoração entrou em loop.')
+                return False
+
+            for non_terminal in self.__non_terminals:
+                num_derivation_non_terminals = self._solve_direct_non_determinism(non_terminal, num_derivation_non_terminals)
+
+            num_non_terminals_with_non_determinism_cases = 0
+            for non_terminal in self.__non_terminals:
+                # Verifica se existe não determinismo indireto e, caso tenha, converte para determinismo direto e resolve.
+                has_indirect_non_determinism = self._convert_indirect_to_direct_non_determinism(non_terminal)
+                if has_indirect_non_determinism:
+                    num_non_terminals_with_non_determinism_cases += 1
+
+            count_steps += 1
+
+            if num_non_terminals_with_non_determinism_cases == 0:
                 break
-
-            # Verifica se existe não determinismo indireto e, caso tenha, converte para determinismo direto e resolve.
-            has_indirect_non_determinism = self._convert_indirect_to_direct_non_determinism(non_terminal)
-            if has_indirect_non_determinism:
-                num_new_non_terminals = self._solve_direct_non_determinism(non_terminal, num_new_non_terminals)
-                count_steps += 1
+        
+        return True
 
 
-    def _solve_direct_non_determinism(self, non_terminal, num_new_non_terminals) -> int:
+    def _solve_direct_non_determinism(self, non_terminal, num_derivation_non_terminals) -> int:
         non_determinism_cases = self._get_direct_non_determinism_cases(self.__productions[non_terminal])
         if len(non_determinism_cases) > 0:
-            for terminal, rest_productions in non_determinism_cases.items():
+            for alpha, betas in non_determinism_cases.items():
                 # Criando novo não terminal.
-                new_non_terminal = 'J' + str(num_new_non_terminals)
-                num_new_non_terminals += 1
+                num_derivation_non_terminals[non_terminal] +=1
+                new_non_terminal = non_terminal + num_derivation_non_terminals[non_terminal] * "'"
+                num_derivation_non_terminals[new_non_terminal] = 0
                 self.__non_terminals.append(new_non_terminal)
                 self.__productions[new_non_terminal] = []
 
                 # Atualizando produções com o novo não terminal.
-                for rest_production in rest_productions:
-                    if rest_production == '':
-                        rest_production = '&'
+                for beta in betas:
+                    self.__productions[non_terminal].remove(alpha + beta)
 
-                    self.__productions[non_terminal].remove(terminal + rest_production)
-
-                    new_production = terminal + new_non_terminal
+                    new_production = alpha + new_non_terminal
                     if new_production not in self.__productions[non_terminal]:
                         self.__productions[non_terminal].append(new_production)
 
-                    if rest_production not in self.__productions[new_non_terminal]:
-                        self.__productions[new_non_terminal].append(rest_production)
+                    if beta == '':
+                        beta = '&'
 
-        return num_new_non_terminals
+                    if beta not in self.__productions[new_non_terminal]:
+                        self.__productions[new_non_terminal].append(beta)
+
+        return num_derivation_non_terminals
 
 
     def _convert_indirect_to_direct_non_determinism(self, non_terminal: str) -> bool:
@@ -166,32 +172,52 @@ class ContextFreeGrammar:
 
     # Pega os casos de não determinismo direto.
     def _get_direct_non_determinism_cases(self, non_terminal_productions: list) -> dict:
-        # Dicionario que contém os terminais e as produções no qual ele faz parte.
-        productions_with_terminal_on_left_side = {}
-        for non_terminal_production in non_terminal_productions:
-            first_symbol, rest_production = self._get_first_symbol_in_production_and_rest(non_terminal_production)
-            if first_symbol == None:
-                continue
-            if first_symbol in self.__terminals:
-                if first_symbol not in productions_with_terminal_on_left_side.keys():
-                    productions_with_terminal_on_left_side[first_symbol] = []
-                productions_with_terminal_on_left_side[first_symbol].append(rest_production)
-        
         non_determinism_cases = {}
-        for terminal, rest_productions_with_terminal in productions_with_terminal_on_left_side.items():
-            if len(rest_productions_with_terminal) > 1:
-                non_determinism_cases[terminal] = rest_productions_with_terminal
-        
+
+        for current_production in non_terminal_productions:
+            first_symbol, _ = self._get_first_symbol_in_production_and_rest(current_production)
+            if first_symbol == None or first_symbol not in self.__terminals:
+                continue
+
+            i = 0
+            while i < len(current_production):
+                if i == 0:
+                    possible_alpha = current_production
+                else:
+                    possible_alpha = current_production[:-i]
+                
+                # Loop para verificar se o possivel alpha existe no inicio de alguma outra produção.
+                for production in non_terminal_productions:
+                    if current_production == production:
+                        continue
+
+                    # Caso exista.
+                    if possible_alpha == production[:len(possible_alpha)]:
+                        if possible_alpha not in non_determinism_cases.keys():
+                            non_determinism_cases[possible_alpha] = []
+
+                        rest_current_production = current_production[len(possible_alpha):]
+                        rest_production = production[len(possible_alpha):]
+                        if rest_current_production not in non_determinism_cases[possible_alpha]:
+                            non_determinism_cases[possible_alpha].append(rest_current_production)
+                        if rest_production not in non_determinism_cases[possible_alpha]:
+                            non_determinism_cases[possible_alpha].append(rest_production)
+
+                # Caso tenha encontrado um alpha, passa para a proxima produção.
+                if possible_alpha in non_determinism_cases.keys():
+                    break
+                i += 1
+
         return non_determinism_cases
 
 
     # Separa o primeiro simbolo da produção e o resto dela.
     def _get_first_symbol_in_production_and_rest(self, production: str) -> tuple:
         first_symbol = ''
-        for char in production:
+        for index_char, char in enumerate(production):
             first_symbol += char
             if first_symbol in self.__non_terminals or first_symbol in self.__terminals or first_symbol == '&':
-                rest_production = production.replace(first_symbol, '')
+                rest_production = production[index_char + 1:]
                 return first_symbol, rest_production
         return None, None
 

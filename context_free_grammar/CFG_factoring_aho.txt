@@ -1,0 +1,12 @@
+#CFG
+#NonTerminals
+S | E
+#Terminals
+a | b | i | t | e
+#InitialSymbol
+S
+#Productions
+S -> iEtS
+S -> iEtSeS
+S -> a
+E -> b
