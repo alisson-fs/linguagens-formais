@@ -1,11 +1,19 @@
 #CFG
 #NonTerminals
-S
+S | X | C | Y | A | B
 #Terminals
-a | b | c | d
+a | b | c
 #InitialSymbol
 S
 #Productions
-S -> aSb
-S -> aSc
-S -> d
+S -> X
+S -> Y
+X -> aXc
+X -> C
+C -> bCc
+C -> &
+Y -> AB
+A -> aAb
+A -> &
+B -> bBc
+B -> &

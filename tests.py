@@ -112,7 +112,6 @@ from utils import automata_union, automata_intersection, RE_to_NFA, FA_to_RG, RG
 #     cfg_factoring_aho.display()
 
 
-# TODO: Fazer esse teste, essa gramática não tem loop.
 # Fatoração de GLC com loop:
 # file_cfg_with_loop = ContextFreeGrammarFile('context_free_grammar/CFG_with_loop.txt')
 # cfg_with_loop = file_cfg_with_loop.read_file()

@@ -81,16 +81,15 @@ class ContextFreeGrammar:
     
 
     def factor(self) -> bool:
-        num_derivation_non_terminals = {non_terminal: 0 for non_terminal in self.__non_terminals}
         count_steps = 0
         while True:
             # Limitando número de passos para garatir que não ficará em loop.
-            if count_steps > 50:
+            if count_steps > 15:
                 print('ERRO: A fatoração entrou em loop.')
                 return False
 
             for non_terminal in self.__non_terminals:
-                num_derivation_non_terminals = self._solve_direct_non_determinism(non_terminal, num_derivation_non_terminals)
+                self._solve_direct_non_determinism(non_terminal)
 
             num_non_terminals_with_non_determinism_cases = 0
             for non_terminal in self.__non_terminals:
@@ -107,14 +106,16 @@ class ContextFreeGrammar:
         return True
 
 
-    def _solve_direct_non_determinism(self, non_terminal, num_derivation_non_terminals) -> int:
+    def _solve_direct_non_determinism(self, non_terminal) -> None:
         non_determinism_cases = self._get_direct_non_determinism_cases(self.__productions[non_terminal])
         if len(non_determinism_cases) > 0:
             for alpha, betas in non_determinism_cases.items():
                 # Criando novo não terminal.
-                num_derivation_non_terminals[non_terminal] +=1
-                new_non_terminal = non_terminal + num_derivation_non_terminals[non_terminal] * "'"
-                num_derivation_non_terminals[new_non_terminal] = 0
+                i = 1
+                while True:
+                    new_non_terminal = non_terminal + i * "'"
+                    if new_non_terminal not in self.__non_terminals:
+                        break
                 self.__non_terminals.append(new_non_terminal)
                 self.__productions[new_non_terminal] = []
 
@@ -132,49 +133,49 @@ class ContextFreeGrammar:
                     if beta not in self.__productions[new_non_terminal]:
                         self.__productions[new_non_terminal].append(beta)
 
-        return num_derivation_non_terminals
-
 
     def _convert_indirect_to_direct_non_determinism(self, non_terminal: str) -> bool:
-        new_productions = []
-        productions_to_remove = []
-        # Loop para tranformar produções indiretas em diretas.
-        for non_terminal_production in self.__productions[non_terminal]:
-            first_symbol, rest_production = self._get_first_symbol_in_production_and_rest(non_terminal_production)
-            if first_symbol == None:
-                continue
+        productions_updated = self.__productions[non_terminal]
+        while True:
+            has_updated = False
+            new_productions = []
+            # Loop para tranformar produções indiretas em diretas.
+            for non_terminal_production in productions_updated:
+                first_symbol, rest_production = self._get_first_symbol_in_production_and_rest(non_terminal_production)
+                if first_symbol == None:
+                    continue
 
-            # Caso o primeiro simbolo seja um terminal.
-            if first_symbol in self.__terminals and non_terminal_production not in new_productions:
-                new_productions.append(non_terminal_production)
+                # Caso o primeiro simbolo seja um terminal.
+                if first_symbol in self.__terminals and non_terminal_production not in new_productions:
+                    new_productions.append(non_terminal_production)
+                
+                # Caso o primeiro simbolo seja um não terminal.
+                elif first_symbol in self.__non_terminals:
+                    has_updated = True
+                    first_symbol_productions = self.__productions[first_symbol]
+                    for first_symbol_production in first_symbol_productions:
+                        new_production = first_symbol_production + rest_production
+                        if new_production not in new_productions:
+                            new_productions.append(new_production)
             
-            # Caso o primeiro simbolo seja um não terminal.
-            elif first_symbol in self.__non_terminals:
-                first_symbol_productions = self.__productions[first_symbol]
-                for first_symbol_production in first_symbol_productions:
-                    new_production = first_symbol_production + rest_production
-                    if new_production not in new_productions:
-                        new_productions.append(new_production)
-                    if non_terminal_production not in productions_to_remove:
-                        productions_to_remove.append(non_terminal_production)
+            productions_updated = new_productions
+            if not has_updated:
+                break
 
         # Verifica se existem casos de não determinismo direto nas novas produções e se tiver atualiza as produções com as novas.
         non_determinism_cases = self._get_direct_non_determinism_cases(new_productions)
         if len(non_determinism_cases) > 0:
-            for production_to_remove in productions_to_remove:
-                self.__productions[non_terminal].remove(production_to_remove)
-            for new_production in new_productions:
-                self.__productions[non_terminal].append(new_production)
+            self.__productions[non_terminal] = new_productions
             return True
         else:
             return False
 
 
     # Pega os casos de não determinismo direto.
-    def _get_direct_non_determinism_cases(self, non_terminal_productions: list) -> dict:
+    def _get_direct_non_determinism_cases(self, productions: list) -> dict:
         non_determinism_cases = {}
 
-        for current_production in non_terminal_productions:
+        for current_production in productions:
             first_symbol, _ = self._get_first_symbol_in_production_and_rest(current_production)
             if first_symbol == None or first_symbol not in self.__terminals:
                 continue
@@ -187,7 +188,7 @@ class ContextFreeGrammar:
                     possible_alpha = current_production[:-i]
                 
                 # Loop para verificar se o possivel alpha existe no inicio de alguma outra produção.
-                for production in non_terminal_productions:
+                for production in productions:
                     if current_production == production:
                         continue
 
