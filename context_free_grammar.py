@@ -392,12 +392,16 @@ class ContextFreeGrammar:
         return follows
 
 
-    def _production_split(self, production) -> list:
+    def _production_split(self, production: str) -> list:
         production_symbols = []
-        while len(production) > 0:
+        while True:
             first_symbol, rest = self._get_first_symbol_in_production_and_rest(production)
             production_symbols.append(first_symbol)
             production = rest
+            if production == None:
+                break
+            if len(production) == 0:
+                break
         return production_symbols
 
 
@@ -485,4 +489,42 @@ class ContextFreeGrammar:
         print(table)
 
 
+    # Reconhece a sentença.
+    def recognize_sentence_ll1(self, sentence: str) -> bool:
+        firsts = self.get_firsts()
+        follows = self.get_follows(firsts)
+        if not self.isLL1(firsts, follows):
+            print('ERRO: A gramática não é LL1.')
+            return False
+        
+        analysis_table = self.create_LL1_analysis_table(firsts, follows)
 
+        sentence_split = self._production_split(sentence)
+        if sentence_split == [None]:
+            if sentence == '':
+                sentence_split = []
+            else:
+                return False
+
+        w = sentence_split + ['$']
+        for symbol in w:
+            if symbol not in self.__terminals + ['$']:
+                return False
+        a = w.pop(0)
+        stack = [self.__initial_symbol, '$']
+        X = stack.pop(0)
+        while X != '$':
+            if X == a:
+                X = stack.pop(0)
+                a = w.pop(0)
+            elif X in self.__terminals:
+                return False
+            elif analysis_table[X][a] == None:
+                return False
+            elif analysis_table[X][a] == '&':
+                X = stack.pop(0)
+            else:
+                stack = self._production_split(analysis_table[X][a]) + stack
+                X = stack.pop(0)
+
+        return True

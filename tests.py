@@ -154,3 +154,22 @@ from utils import automata_union, automata_intersection, RE_to_NFA, FA_to_RG, RG
 # cfg_follows_nullable.display()
 # follows_cfg_follows_nullable = cfg_follows_nullable.get_follows()
 # print(follows_cfg_follows_nullable)
+
+
+# Construção da tabela do preditivo LL1:
+# file_cfg_ll1 = ContextFreeGrammarFile('context_free_grammar/CFG_ll1.txt')
+# cfg_ll1 = file_cfg_ll1.read_file()
+# cfg_ll1.display()
+# print()
+# analysis_table = cfg_ll1.create_LL1_analysis_table()
+# cfg_ll1.show_LL1_analysis_table(analysis_table)
+
+
+# Reconhecimento de sentença com preditivo LL1:
+# file_cfg_ll1 = ContextFreeGrammarFile('context_free_grammar/CFG_ll1.txt')
+# cfg_ll1 = file_cfg_ll1.read_file()
+# cfg_ll1.display()
+# print(cfg_ll1.recognize_sentence_ll1('id+id*id'))
+# print(cfg_ll1.recognize_sentence_ll1('+id*id'))
+# print(cfg_ll1.recognize_sentence_ll1('abc'))
+# print(cfg_ll1.recognize_sentence_ll1(''))
