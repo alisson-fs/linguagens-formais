@@ -1,0 +1,16 @@
+#CFG
+#NonTerminals
+E | E' | T | T' | F
+#Terminals
+id | + | * | ( | )
+#InitialSymbol
+E
+#Productions
+E -> TE'
+E' -> +TE'
+E' -> &
+T -> FT'
+T' -> *FT'
+T' -> &
+F -> (E)
+F -> id

@@ -125,6 +125,8 @@ from utils import automata_union, automata_intersection, RE_to_NFA, FA_to_RG, RG
 # Remover recursão a esquerda com apenas recursão direta:
 # file_cfg_just_direct_left_recursion = ContextFreeGrammarFile('context_free_grammar/CFG_just_direct_left_recursion.txt')
 # cfg_just_direct_left_recursion = file_cfg_just_direct_left_recursion.read_file()
+# cfg_just_direct_left_recursion.display()
+# print()
 # cfg_just_direct_left_recursion.remove_left_recursion()
 # cfg_just_direct_left_recursion.display()
 
@@ -132,6 +134,8 @@ from utils import automata_union, automata_intersection, RE_to_NFA, FA_to_RG, RG
 # Remover recursão a esquerda com recursão direta e indireta:
 # file_cfg_with_direct_and_indirect_left_recursion = ContextFreeGrammarFile('context_free_grammar/CFG_with_direct_and_indirect_left_recursion.txt')
 # cfg_with_direct_and_indirect_left_recursion = file_cfg_with_direct_and_indirect_left_recursion.read_file()
+# cfg_with_direct_and_indirect_left_recursion.display()
+# print()
 # cfg_with_direct_and_indirect_left_recursion.remove_left_recursion()
 # cfg_with_direct_and_indirect_left_recursion.display()
 

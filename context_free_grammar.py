@@ -1,3 +1,6 @@
+from tabulate import tabulate
+
+
 class ContextFreeGrammar:
     def __init__(
             self, 
@@ -116,6 +119,7 @@ class ContextFreeGrammar:
                     new_non_terminal = non_terminal + i * "'"
                     if new_non_terminal not in self.__non_terminals:
                         break
+                    i += 1
                 self.__non_terminals.append(new_non_terminal)
                 self.__productions[new_non_terminal] = []
 
@@ -146,7 +150,7 @@ class ContextFreeGrammar:
                     continue
 
                 # Caso o primeiro simbolo seja um terminal.
-                if first_symbol in self.__terminals and non_terminal_production not in new_productions:
+                if first_symbol in self.__terminals + ['&'] and non_terminal_production not in new_productions:
                     new_productions.append(non_terminal_production)
                 
                 # Caso o primeiro simbolo seja um não terminal.
@@ -154,7 +158,10 @@ class ContextFreeGrammar:
                     has_updated = True
                     first_symbol_productions = self.__productions[first_symbol]
                     for first_symbol_production in first_symbol_productions:
-                        new_production = first_symbol_production + rest_production
+                        if first_symbol_production == '&' and rest_production != '':
+                            new_production = rest_production
+                        else:
+                            new_production = first_symbol_production + rest_production
                         if new_production not in new_productions:
                             new_productions.append(new_production)
             
@@ -217,45 +224,64 @@ class ContextFreeGrammar:
         first_symbol = ''
         for index_char, char in enumerate(production):
             first_symbol += char
-            if first_symbol in self.__non_terminals or first_symbol in self.__terminals or first_symbol == '&':
+            if (first_symbol in self.__non_terminals or 
+                first_symbol in self.__terminals or 
+                first_symbol == '&'):
+
                 rest_production = production[index_char + 1:]
-                return first_symbol, rest_production
+                if index_char < len(production) - 1:
+                    if production[index_char + 1] != "'":
+                        return first_symbol, rest_production
+                else:
+                    return first_symbol, rest_production
         return None, None
 
 
     def remove_left_recursion(self) -> None:
-        self._convert_indirect_to_direct_recursion()
-        self._remove_direct_left_recursion()
+        for i in range(1, len(self.__non_terminals) + 1):
+            Ai = self.__non_terminals[i - 1]
+            for j in range(1, i):
+                Aj = self.__non_terminals[j - 1]
+                for Ai_production in self.__productions[Ai]:
+                    first_symbol, alpha = self._get_first_symbol_in_production_and_rest(Ai_production)
+                    
+                    if first_symbol == Aj and alpha != '':
+                        self.__productions[Ai].remove(Ai_production)
+                        for Aj_production in self.__productions[Aj]:
+                            new_production = Aj_production + alpha
+                            if new_production not in self.__productions[Ai]:
+                                self.__productions[Ai].append(new_production)
+            
+            self._remove_direct_left_recursion(Ai)
 
 
-    def _remove_direct_left_recursion(self) -> None:
+    def _remove_direct_left_recursion(self, non_terminal: str) -> None:
         new_productions = {}
-        for non_terminal, non_terminal_productions in self.__productions.items():
-            productions_with_recursion = []
+        productions_with_recursion = []
 
-            for non_terminal_production in non_terminal_productions:
-                if non_terminal_production[0] == non_terminal:
-                    productions_with_recursion.append(non_terminal_production)
+        for non_terminal_production in self.__productions[non_terminal]:
+            first_symbol, _ = self._get_first_symbol_in_production_and_rest(non_terminal_production)
+            if first_symbol == non_terminal:
+                productions_with_recursion.append(non_terminal_production)
 
-            if productions_with_recursion:
-                new_non_terminal = non_terminal + "'"
-                new_non_terminal_productions = ['&']
-                updated_non_terminal_productions = []
+        if productions_with_recursion:
+            new_non_terminal = non_terminal + "'"
+            self.__non_terminals.append(new_non_terminal)
+            new_non_terminal_productions = ['&']
+            updated_non_terminal_productions = []
 
-                for non_terminal_production in non_terminal_productions:
-                    if non_terminal_production in productions_with_recursion:
-                        new_non_terminal_productions.append(non_terminal_production[1:] + new_non_terminal)
-                    else:
-                        updated_non_terminal_productions.append(non_terminal_production + new_non_terminal)
+            for non_terminal_production in self.__productions[non_terminal]:
+                _, beta = self._get_first_symbol_in_production_and_rest(non_terminal_production)
+                if non_terminal_production in productions_with_recursion:
+                    new_non_terminal_productions.append(beta + new_non_terminal)
+                else:
+                    updated_non_terminal_productions.append(non_terminal_production + new_non_terminal)
 
-                new_productions[non_terminal] = updated_non_terminal_productions
-                new_productions[new_non_terminal] = new_non_terminal_productions
+            self.__productions[non_terminal] = updated_non_terminal_productions
+            self.__productions[new_non_terminal] = new_non_terminal_productions
 
-            else:
-                new_productions[non_terminal] = non_terminal_productions
-
-        self.__non_terminals = list(new_productions.keys())
-        self.__productions = new_productions
+        else:
+            new_productions[non_terminal] = self.__productions[non_terminal]
 
 
     def _convert_indirect_to_direct_recursion(self) -> None:
@@ -277,7 +303,7 @@ class ContextFreeGrammar:
 
     def get_firsts(self) -> dict:
         # Define os firsts para os terminais.
-        firsts = {terminal: set(terminal) for terminal in self.__terminals + ['&']}
+        firsts = {terminal: set((terminal,)) for terminal in self.__terminals + ['&']}
 
         # Define os firsts para os não terminais.
         for non_terminal in self.__non_terminals:
@@ -341,7 +367,7 @@ class ContextFreeGrammar:
                     nullable_or_non_existent_beta = False
                     for index_symbol, symbol in enumerate(production_split):
                         if symbol in self.__non_terminals:
-                            updated_non_terminal_follows = follows[symbol]
+                            updated_non_terminal_follows = follows[symbol].copy()
 
                             beta = production_split[index_symbol + 1:]
                             if len(beta) > 0:
@@ -358,7 +384,7 @@ class ContextFreeGrammar:
 
                             if updated_non_terminal_follows != follows[symbol]:
                                 follows_updated = True
-                                follows[non_terminal] = updated_non_terminal_follows
+                                follows[symbol] = updated_non_terminal_follows
 
             if not follows_updated:
                 break
@@ -385,3 +411,78 @@ class ContextFreeGrammar:
             if index_symbol == len(beta) - 1:
                 beta_firsts.add('&')
         return beta_firsts
+
+
+    def isLL1(self, firsts: dict = None, follows: dict = None) -> bool:
+        if not firsts:
+            firsts = self.get_firsts()
+        if not follows:
+            follows = self.get_follows(firsts)
+
+        for non_terminal in self.__non_terminals:
+            if len(firsts[non_terminal].intersection(follows[non_terminal])) > 0:
+                return False
+        return True
+    
+
+    def create_LL1_analysis_table(self, firsts: dict = None, follows: dict = None) -> dict:
+        if not firsts:
+            firsts = self.get_firsts()
+        if not follows:
+            follows = self.get_follows(firsts)
+        
+        analysis_table = {}
+        for non_terminal in self.__non_terminals:
+            analysis_table[non_terminal] = {}
+            for terminal in self.__terminals + ['$']:
+                analysis_table[non_terminal][terminal] = None
+
+            for non_terminal_production in self.__productions[non_terminal]:
+                first_symbol, _ = self._get_first_symbol_in_production_and_rest(non_terminal_production)
+
+                if first_symbol != '&':
+                    first_symbol_firsts = firsts[first_symbol]
+                    for first_symbol_first in first_symbol_firsts:
+                        analysis_table[non_terminal][first_symbol_first] = non_terminal_production
+                else:
+                    non_terminal_follows = follows[non_terminal]
+                    for non_terminal_follow in non_terminal_follows:
+                        analysis_table[non_terminal][non_terminal_follow] = non_terminal_production
+        
+        return analysis_table
+
+
+    def show_LL1_analysis_table(self, table_dict: dict) -> None:
+        production_equivalent_number = {}
+        num_productions = 1
+        for non_terminal, productions in self.__productions.items():
+            for production in productions:
+                production_equivalent_number[(non_terminal, production)] = num_productions
+                num_productions += 1
+
+
+        first_line = list(table_dict.values())[0]
+        headers = [''] + list([terminal for terminal in first_line.keys()])
+        table_data = []
+        for non_terminal, productions in table_dict.items():
+            row = [non_terminal]
+            for production in productions.values():
+                if production == None:
+                    row.append('')
+                else:
+                    row.append(production_equivalent_number[(non_terminal, production)])
+            table_data.append(row)
+
+        table = tabulate(
+            tabular_data=table_data, 
+            headers=headers, 
+            tablefmt="fancy_grid", 
+            stralign="center"
+        )
+
+        for p, n in production_equivalent_number.items():
+            print(str(n) + ': ' + str(p[0]) + ' -> ' + str(p[1]))
+        print(table)
+
+
+
