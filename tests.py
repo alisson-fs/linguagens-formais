@@ -3,7 +3,7 @@ from finite_automata_file import FiniteAutomataFile
 from finite_automata import FiniteAutomata
 from regular_expression_file import RegularExpressionFile
 from regular_grammar_file import RegularGrammarFile
-from utils import automata_union, automata_intersection, RE_to_NFA, FA_to_RG, RG_to_FA
+from utils import automata_union, automata_intersection, RE_to_DFA, FA_to_RG, RG_to_FA
 
 
 # Determinização sem Epsilon:
@@ -63,12 +63,12 @@ from utils import automata_union, automata_intersection, RE_to_NFA, FA_to_RG, RG
 # Conversão de ER para AFD:
 # file_regular_expression_1 = RegularExpressionFile('regular_expressions/regular_expression_1.txt')
 # regular_expression_1 = file_regular_expression_1.read_file()
-# fa_corresponding_regular_expression_1 = RE_to_NFA(regular_expression_1)
+# fa_corresponding_regular_expression_1 = RE_to_DFA(regular_expression_1)
 # fa_corresponding_regular_expression_1.display()
 
 # file_regular_expression_2 = RegularExpressionFile('regular_expressions/regular_expression_2.txt')
 # regular_expression_2 = file_regular_expression_2.read_file()
-# fa_corresponding_regular_expression_2 = RE_to_NFA(regular_expression_2)
+# fa_corresponding_regular_expression_2 = RE_to_DFA(regular_expression_2)
 # fa_corresponding_regular_expression_2.display()
 
 

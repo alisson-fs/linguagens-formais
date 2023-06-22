@@ -71,9 +71,9 @@ class ContextFreeGrammar:
             '#Productions\n'
         i = 0
         for non_terminal, non_terminal_productions in self.__productions.items():
-            for non_terminal_production in non_terminal_productions:
+            for j, non_terminal_production in enumerate(non_terminal_productions):
                 production = non_terminal + ' -> ' + non_terminal_production
-                if i == len(self.__productions)-1:
+                if i == len(self.__productions) - 1 and j == len(non_terminal_production) - 1:
                     text += production
                 else:
                     text += production + '\n'

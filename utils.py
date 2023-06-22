@@ -90,7 +90,7 @@ def automata_intersection(automata_A: FiniteAutomata, automata_B: FiniteAutomata
     return union_automata_A_B
 
 
-def RE_to_NFA(re: RegularExpression) -> FiniteAutomata:
+def RE_to_DFA(re: RegularExpression) -> FiniteAutomata:
     # Define o followpos.
     followpos = {i: set() for i in re.indexes}
     followpos = re.root.get_followpos(followpos)

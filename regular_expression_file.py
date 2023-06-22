@@ -7,13 +7,9 @@ class RegularExpressionFile:
 
 
     def read_file(self) -> RegularExpression:
-        text = None
-        try:
-            file = open(self.__file)
-            text = file.read().split('\n')
-            file.close()
-        except OSError:
-            file.close()
+        file = open(self.__file)
+        text = file.read().split('\n')
+        file.close()
         return self._get_regular_expression(text)
 
 
