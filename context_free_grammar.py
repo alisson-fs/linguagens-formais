@@ -218,22 +218,21 @@ class ContextFreeGrammar:
 
         return non_determinism_cases
 
-
+    
     # Separa o primeiro simbolo da produção e o resto dela.
     def _get_first_symbol_in_production_and_rest(self, production: str) -> tuple:
-        first_symbol = ''
-        for index_char, char in enumerate(production):
-            first_symbol += char
-            if (first_symbol in self.__non_terminals or 
-                first_symbol in self.__terminals or 
-                first_symbol == '&'):
-
-                rest_production = production[index_char + 1:]
-                if index_char < len(production) - 1:
-                    if production[index_char + 1] != "'":
-                        return first_symbol, rest_production
-                else:
-                    return first_symbol, rest_production
+        i = 0
+        while i < len(production):
+            if i == 0:
+                first_symbol = production
+            else:
+                first_symbol = production[:-i]
+            
+            if first_symbol in self.__terminals + self.__non_terminals + ['&']:
+                rest_production = production[len(first_symbol):]
+                return first_symbol, rest_production
+            else:
+                i += 1
         return None, None
 
 
@@ -315,7 +314,7 @@ class ContextFreeGrammar:
             for non_terminal, non_terminal_productions in self.__productions.items():
                 for non_terminal_production in non_terminal_productions:
                     first_symbol_in_production, production_rest = self._get_first_symbol_in_production_and_rest(non_terminal_production)
-
+                    updated_non_terminal_first = set()
                     # Se o primeiro simbolo da produção do não terminal for um terminal, adiciona ele aos firsts do não terminal.
                     if first_symbol_in_production in self.__terminals:
                         updated_non_terminal_first = firsts[non_terminal].union(firsts[first_symbol_in_production])
@@ -424,7 +423,7 @@ class ContextFreeGrammar:
             follows = self.get_follows(firsts)
 
         for non_terminal in self.__non_terminals:
-            if len(firsts[non_terminal].intersection(follows[non_terminal])) > 0:
+            if '&' in self.__productions[non_terminal] and len(firsts[non_terminal].intersection(follows[non_terminal])) > 0:
                 return False
         return True
     
@@ -442,13 +441,13 @@ class ContextFreeGrammar:
                 analysis_table[non_terminal][terminal] = None
 
             for non_terminal_production in self.__productions[non_terminal]:
-                first_symbol, _ = self._get_first_symbol_in_production_and_rest(non_terminal_production)
-
-                if first_symbol != '&':
-                    first_symbol_firsts = firsts[first_symbol]
-                    for first_symbol_first in first_symbol_firsts:
-                        analysis_table[non_terminal][first_symbol_first] = non_terminal_production
-                else:
+                production_firsts = self.get_production_firsts(firsts, non_terminal_production)
+                if non_terminal_production != '&':
+                    for production_first in production_firsts:
+                        if production_first != '&':
+                            analysis_table[non_terminal][production_first] = non_terminal_production
+                
+                if '&' in production_firsts:
                     non_terminal_follows = follows[non_terminal]
                     for non_terminal_follow in non_terminal_follows:
                         analysis_table[non_terminal][non_terminal_follow] = non_terminal_production
@@ -528,3 +527,17 @@ class ContextFreeGrammar:
                 X = stack.pop(0)
 
         return True
+
+
+    def get_production_firsts(self, firsts: dict, production: str) -> set:
+        non_terminals = self.__non_terminals + ['production_firsts']
+        productions = self.__productions.copy()
+        productions['production_firsts'] = set((production,))
+        cfg = ContextFreeGrammar(
+            non_terminals=non_terminals,
+            terminals=self.__terminals,
+            productions=productions,
+            initial_symbol=self.__initial_symbol
+        )
+        productions_firsts = cfg.get_firsts()
+        return productions_firsts['production_firsts']
