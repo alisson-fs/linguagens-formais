@@ -247,6 +247,7 @@ class FiniteAutomata:
 
     # Minimização.
     def minimize(self, clean_automata: bool = False) -> None:
+        
         if clean_automata:
             self._clean_automata()
         # Determiniza.
@@ -255,8 +256,9 @@ class FiniteAutomata:
         self._remove_unreachable_states()
         # Remove estados mortos.
         self._remove_dead_states()
-        # Junta estados equivalentes com algoritmo de partições de Hopcroft.
-        self._unite_equivalent_states()
+        if not self.is_empty_automata():
+            # Junta estados equivalentes com algoritmo de partições de Hopcroft.
+            self._unite_equivalent_states()
 
 
     def _remove_unreachable_states(self) -> None:
@@ -434,6 +436,11 @@ class FiniteAutomata:
             base_index: int = 0
     ) -> None:
         j = base_index
+
+        if self.is_empty_automata() and self.__initial_state in self.__accept_states:
+            correspondent_state = new_states[j]
+            new_accept_states.append(correspondent_state)
+
         for state in self.__states:
             correspondent_state = new_states[j]
             for i in range(0, len(self.__alphabet)):
@@ -482,6 +489,11 @@ class FiniteAutomata:
             new_accept_states: list 
     ) -> None:
         j = base_index
+
+        if self.is_empty_automata() and self.__initial_state in self.__accept_states:
+            correspondent_state = new_states[j]
+            new_accept_states.append(correspondent_state)
+
         for state in self.__states:
             correspondent_state = new_states[j]
             for i in range(0, len(self.__alphabet)):
@@ -543,3 +555,11 @@ class FiniteAutomata:
             current_state = self.__transitions[current_state][symbol_index]
         # Verifica se o último estado é estado de aceitação.
         return current_state in self.__accept_states
+
+
+    def is_empty_automata(self) -> bool:
+        transitions = list(set(self.__transitions[self.__initial_state]))
+        if len(self.__transitions) == 1 and transitions == ['-']:
+            return True
+        else:
+            return False

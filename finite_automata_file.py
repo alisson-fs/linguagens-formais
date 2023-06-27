@@ -39,7 +39,10 @@ class FiniteAutomataFile:
 
     def _get_alphabet(self, text: str) -> list:
         index = text.index('#Alphabet')
-        return text[index + 1].split(' | ')
+        alphabet = text[index + 1].split(' | ')
+        if '-' in alphabet:
+            alphabet.remove('-')
+        return alphabet
 
     def _get_transitions(self, text: str) -> dict:
         index = text.index('#Transitions')

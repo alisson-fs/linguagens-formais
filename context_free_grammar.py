@@ -241,6 +241,8 @@ class ContextFreeGrammar:
             Ai = self.__non_terminals[i - 1]
             for j in range(1, i):
                 Aj = self.__non_terminals[j - 1]
+                print('Ai= ', Ai)
+                print('Aj= ', Aj)
                 for Ai_production in self.__productions[Ai]:
                     first_symbol, alpha = self._get_first_symbol_in_production_and_rest(Ai_production)
                     

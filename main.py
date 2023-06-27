@@ -63,7 +63,7 @@ def get_context_free_grammar() -> ContextFreeGrammar:
 
 def operations_automata(fa: FiniteAutomata = None) -> None:
     while True:
-        print('Operações:')
+        print('Operações com Automatos Finitos:')
         print('1 - Mostrar')
         print('2 - Exportar')
         print('3 - Conversão AFND para AFD')
@@ -71,13 +71,14 @@ def operations_automata(fa: FiniteAutomata = None) -> None:
         print('5 - Minimização')
         print('6 - União')
         print('7 - Interseção')
-        print('8 - Renomear estados')
-        print('9 - Sair')
+        print('8 - Reconhecer sentença')
+        print('9 - Renomear estados')
+        print('10 - Sair')
         print()
 
         while True:
             operation = int(input('Digite o número referente à operação que deseja executar: '))
-            if operation >= 1 and operation <= 9:
+            if operation >= 1 and operation <= 10:
                 print()
                 break
             print('ERRO: Número inválido, digite outro.')    
@@ -125,18 +126,29 @@ def operations_automata(fa: FiniteAutomata = None) -> None:
             fa2 = get_automata() 
             fa = automata_intersection(fa1, fa2)
             print()
-
+            
         elif operation == 8:
-            fa._clean_automata()
+            if not fa:
+                fa = get_automata()
+            sentence = input('Sentença: ')
+            valid_sentence = fa.recognize_sentence(sentence)
+            if valid_sentence:
+                print('Sentença válida.')
+            else:
+                print('Sentença inválida.')
             print()
             
         elif operation == 9:
+            fa._clean_automata()
+            print()
+            
+        elif operation == 10:
             break
 
 
 def operations_regular_grammar(rg: RegularGrammar = None) -> None:
     while True:
-        print('Operações:')
+        print('Operações com Gramáticas Regulares:')
         print('1 - Mostrar')
         print('2 - Exportar')
         print('3 - Conversão GR para AFND')
@@ -175,7 +187,7 @@ def operations_regular_grammar(rg: RegularGrammar = None) -> None:
 
 def operations_regular_expression(re: RegularExpression = None) -> None:
     while True:
-        print('Operações:')
+        print('Operações com Expressões Regulares:')
         print('1 - Mostrar')
         print('2 - Exportar')
         print('3 - Conversão ER para AFD')
@@ -214,7 +226,7 @@ def operations_regular_expression(re: RegularExpression = None) -> None:
 
 def operations_context_free_grammar(cfg: ContextFreeGrammar = None) -> None:
     while True:
-        print('Operações:')
+        print('Operações com Gramáticas Livres de Contexto:')
         print('1 - Mostrar')
         print('2 - Exportar')
         print('3 - Fatorar')
@@ -278,9 +290,9 @@ def operations_context_free_grammar(cfg: ContextFreeGrammar = None) -> None:
             print()
 
         elif operation == 8:
-            sentence = input('Sentença: ')
             if not cfg:
-                cfg = get_context_free_grammar() 
+                cfg = get_context_free_grammar()
+            sentence = input('Sentença: ')
             valid_sentence = cfg.recognize_sentence_ll1(sentence)
             if valid_sentence:
                 print('Sentença válida.')

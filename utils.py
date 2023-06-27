@@ -8,6 +8,7 @@ def automata_union(
         automata_B: FiniteAutomata,
         convert_nfa_to_dfa: bool = True
 ) -> tuple[FiniteAutomata, dict, dict]:
+    automata_A, automata_B = merge_alphabets(automata_A, automata_B)
     # Inicializando novos estados.
     n_states_A = len(automata_A.states)
     n_states_B = len(automata_B.states)
@@ -261,3 +262,27 @@ def RG_to_FA(rg: RegularGrammar) -> FiniteAutomata:
             transitions[state].append(next_state)
 
     return FiniteAutomata(states, alphabet, transitions, initial_state, accept_states)
+
+
+def merge_alphabets(automata_A: FiniteAutomata, automata_B: FiniteAutomata) -> tuple[FiniteAutomata, FiniteAutomata]:
+    new_alphabet = automata_A.alphabet[:]
+    equivalent_index_alphabet_B_to_new_alphabet = {}
+    for symbol in automata_B.alphabet:
+        if symbol not in automata_A.alphabet:
+            new_alphabet.append(symbol)
+        equivalent_index_alphabet_B_to_new_alphabet[automata_B.alphabet.index(symbol)] = new_alphabet.index(symbol)
+
+
+    len_diff = len(new_alphabet) - len(automata_A.alphabet)
+    for state_transitions in automata_A.transitions.keys():
+        automata_A.transitions[state_transitions] += ['-'] * len_diff
+
+    for state_transitions in automata_B.transitions.keys():
+        temp_transitions = ['-'] * len(new_alphabet)    
+        for symbol in automata_B.alphabet:
+            index_symbol = automata_B.alphabet.index(symbol)
+            temp_transitions[equivalent_index_alphabet_B_to_new_alphabet[index_symbol]] = automata_B.transitions[state_transitions][index_symbol]
+        automata_B.transitions[state_transitions] = temp_transitions
+    automata_A.alphabet = new_alphabet
+    automata_B.alphabet = new_alphabet
+    return automata_A, automata_B
